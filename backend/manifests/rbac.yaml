@@ -17,5 +17,6 @@ kind: ServiceAccount
 apiVersion: v1
 metadata:
   name: edge-ui-backend-sa
+  namespace: kube-system
   labels:
     app: edge-ui-backend
