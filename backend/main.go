@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	Version    = "v0.0.0-dev"
+	Version    = "v0.0.1"
 	GitCommit  = "HEAD"
 	KubeConfig string
 	steveConfig      stevecli.Config
@@ -27,9 +27,9 @@ var (
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "testy"
+	app.Name = "edge-ui-backend"
 	app.Version = version.FriendlyVersion()
-	app.Usage = "testy needs help!"
+	app.Usage = "run k3s edge UI api!"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:        "kubeconfig",
