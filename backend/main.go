@@ -9,8 +9,13 @@ import (
 	"flag"
 	"os"
 
+	"github.com/cnrancher/edge-ui/backend/pkg/auth"
 	"github.com/rancher/steve/pkg/debug"
+	steveserver "github.com/rancher/steve/pkg/server"
 	stevecli "github.com/rancher/steve/pkg/server/cli"
+	"github.com/rancher/wrangler/pkg/kubeconfig"
+	"github.com/rancher/wrangler/pkg/ratelimit"
+
 	"github.com/rancher/steve/pkg/version"
 	"github.com/rancher/wrangler/pkg/signals"
 	"github.com/sirupsen/logrus"
@@ -18,10 +23,10 @@ import (
 )
 
 var (
-	Version    = "v0.0.1"
-	GitCommit  = "HEAD"
-	KubeConfig string
-	steveConfig      stevecli.Config
+	Version     = "v0.0.1"
+	GitCommit   = "HEAD"
+	KubeConfig  string
+	steveConfig stevecli.Config
 	debugConfig debug.Config
 )
 
@@ -46,13 +51,32 @@ func main() {
 	}
 }
 
-func run(_ *cli.Context) error{
+func run(_ *cli.Context) error {
 	flag.Parse()
 
 	logrus.Info("Starting controller")
 	ctx := signals.SetupSignalHandler(context.Background())
 
 	debugConfig.MustSetupDebug()
-	s := steveConfig.MustServer()
+
+	s, err := newSteveServer(steveConfig)
+	if err != nil {
+		return err
+	}
 	return s.ListenAndServe(ctx, steveConfig.HTTPSListenPort, steveConfig.HTTPListenPort, nil)
+}
+
+func newSteveServer(c stevecli.Config) (*steveserver.Server, error) {
+	restConfig, err := kubeconfig.GetInteractiveClientConfig(c.KubeConfig).ClientConfig()
+	if err != nil {
+		return nil, err
+	}
+	restConfig.RateLimiter = ratelimit.None
+	a := auth.NewK3sAuthenticator(restConfig.Host)
+	return &steveserver.Server{RestConfig: restConfig,
+		AuthMiddleware: auth.ToAuthMiddleware(a),
+		DashboardURL: func() string {
+			return c.DashboardURL
+		},
+	}, nil
 }
