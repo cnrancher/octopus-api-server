@@ -1,3 +1,4 @@
+// refer to: https://github.com/rancher/k3s/blob/master/pkg/clientaccess/clientaccess.go
 package auth
 
 import (

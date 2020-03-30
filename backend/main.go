@@ -32,7 +32,7 @@ var (
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "edge-ui-backend"
+	app.Name = "edge-api-controller"
 	app.Version = version.FriendlyVersion()
 	app.Usage = "run k3s edge UI api!"
 	app.Flags = []cli.Flag{

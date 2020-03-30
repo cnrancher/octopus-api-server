@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: edge-ui-backend
+  name: edge-api-controller
   namespace: kube-system
   labels:
-    app: edge-ui-backend
+    app: edge-api-controller
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: edge-ui-backend
+      app: edge-api-controller
   template:
     metadata:
       labels:
-        app: edge-ui-backend
+        app: edge-api-controller
     spec:
-      serviceAccountName: edge-ui-backend-sa
+      serviceAccountName: edge-api-controller-sa
       containers:
       - name: api-controller
-        image: guangbo/edge-ui-backend:v0.0.1
-        command: ["edge-ui-backend"]
+        image: guangbo/edge-api-controller:v0.0.1
+        command: ["edge-api-controller"]
         ports:
         - containerPort: 8443
           protocol: TCP

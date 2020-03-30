@@ -1,3 +1,3 @@
 FROM alpine
-COPY bin/edge-ui-backend /usr/bin/
-CMD ["edge-ui-backend"]
+COPY bin/edge-api-controller /usr/bin/
+CMD ["edge-api-controller"]

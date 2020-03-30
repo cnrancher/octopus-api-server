@@ -10,7 +10,7 @@ edge-ui backend
 
 ## Running
 
-`./bin/edge-ui-backend`
+`./bin/edge-api-controller`
 
 ## License
 Copyright (c) 2019 [Rancher Labs, Inc.](http://rancher.com)
