@@ -69,17 +69,17 @@ func refresh(gv schema.GroupVersion, groupToPreferredVersion map[string]string, 
 
 		logrus.Infof("APIVersion %s/%s Kind %s", gvk.Group, gvk.Version, gvk.Kind)
 
-		schema := schemasMap[GVKToSchemaID(gvk)]
+		schema := schemasMap[GVKToVersionedSchemaID(gvk)]
 		if schema == nil {
 			schema = &types.APISchema{
 				Schema: &schemas.Schema{
-					ID: GVKToSchemaID(gvk),
+					ID: GVKToVersionedSchemaID(gvk),
 				},
 			}
 			attributes.SetGVK(schema, gvk)
 		}
 
-		schema.PluralName = GVRToPluralName(gvr)
+		schema.PluralName = gvrToPluralName(gvr)
 		attributes.SetAPIResource(schema, resource)
 		if preferredVersion := groupToPreferredVersion[gv.Group]; preferredVersion != "" && preferredVersion != gv.Version {
 			attributes.SetPreferredVersion(schema, preferredVersion)

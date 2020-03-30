@@ -104,7 +104,7 @@ func (s *Store) byID(apiOp *types.APIRequest, schema *types.APISchema, id string
 		return nil, err
 	}
 
-	obj, err := k8sClient.Get(id, opts)
+	obj, err := k8sClient.Get(apiOp.Context(), id, opts)
 	rowToObject(obj)
 	return obj, err
 }
@@ -221,7 +221,7 @@ func (s *Store) list(apiOp *types.APIRequest, schema *types.APISchema, client dy
 		return types.APIObjectList{}, nil
 	}
 
-	resultList, err := client.List(opts)
+	resultList, err := client.List(apiOp.Context(), opts)
 	if err != nil {
 		return types.APIObjectList{}, err
 	}
@@ -250,7 +250,7 @@ func returnErr(err error, c chan types.APIEvent) {
 func (s *Store) listAndWatch(apiOp *types.APIRequest, k8sClient dynamic.ResourceInterface, schema *types.APISchema, w types.WatchRequest, result chan types.APIEvent) {
 	rev := w.Revision
 	if rev == "" {
-		list, err := k8sClient.List(metav1.ListOptions{
+		list, err := k8sClient.List(apiOp.Context(), metav1.ListOptions{
 			Limit: 1,
 		})
 		if err != nil {
@@ -263,7 +263,7 @@ func (s *Store) listAndWatch(apiOp *types.APIRequest, k8sClient dynamic.Resource
 	}
 
 	timeout := int64(60 * 30)
-	watcher, err := k8sClient.Watch(metav1.ListOptions{
+	watcher, err := k8sClient.Watch(apiOp.Context(), metav1.ListOptions{
 		Watch:           true,
 		TimeoutSeconds:  &timeout,
 		ResourceVersion: rev,
@@ -289,7 +289,7 @@ func (s *Store) listAndWatch(apiOp *types.APIRequest, k8sClient dynamic.Resource
 }
 
 func (s *Store) WatchNames(apiOp *types.APIRequest, schema *types.APISchema, w types.WatchRequest, names sets.String) (chan types.APIEvent, error) {
-	adminClient, err := s.clientGetter.TableClientForWatch(apiOp, schema, apiOp.Namespace)
+	adminClient, err := s.clientGetter.TableAdminClientForWatch(apiOp, schema, apiOp.Namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -372,6 +372,10 @@ func (s *Store) Create(apiOp *types.APIRequest, schema *types.APISchema, params 
 	if name == "" && input.String("metadata", "generateName") == "" {
 		input.SetNested(schema.ID[0:1]+"-", "metadata", "generatedName")
 	}
+	if ns == "" && apiOp.Namespace != "" {
+		ns = apiOp.Namespace
+		input.SetNested(ns, "metadata", "namespace")
+	}
 
 	gvk := attributes.GVK(schema)
 	input["apiVersion"], input["kind"] = gvk.ToAPIVersionAndKind()
@@ -386,7 +390,8 @@ func (s *Store) Create(apiOp *types.APIRequest, schema *types.APISchema, params 
 		return types.APIObject{}, err
 	}
 
-	resp, err = k8sClient.Create(&unstructured.Unstructured{Object: input}, opts)
+	resp, err = k8sClient.Create(apiOp.Context(), &unstructured.Unstructured{Object: input}, opts)
+	rowToObject(resp)
 	return toAPI(schema, resp), err
 }
 
@@ -430,7 +435,7 @@ func (s *Store) Update(apiOp *types.APIRequest, schema *types.APISchema, params 
 			}
 		}
 
-		resp, err := k8sClient.Patch(id, pType, bytes, opts)
+		resp, err := k8sClient.Patch(apiOp.Context(), id, pType, bytes, opts)
 		if err != nil {
 			return types.APIObject{}, err
 		}
@@ -448,7 +453,7 @@ func (s *Store) Update(apiOp *types.APIRequest, schema *types.APISchema, params 
 		return types.APIObject{}, err
 	}
 
-	resp, err := k8sClient.Update(&unstructured.Unstructured{Object: moveFromUnderscore(input)}, metav1.UpdateOptions{})
+	resp, err := k8sClient.Update(apiOp.Context(), &unstructured.Unstructured{Object: moveFromUnderscore(input)}, metav1.UpdateOptions{})
 	if err != nil {
 		return types.APIObject{}, err
 	}
@@ -467,7 +472,7 @@ func (s *Store) Delete(apiOp *types.APIRequest, schema *types.APISchema, id stri
 		return types.APIObject{}, err
 	}
 
-	if err := k8sClient.Delete(id, &opts); err != nil {
+	if err := k8sClient.Delete(apiOp.Context(), id, opts); err != nil {
 		return types.APIObject{}, err
 	}
 

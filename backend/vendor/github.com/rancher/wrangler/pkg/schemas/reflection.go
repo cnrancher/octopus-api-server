@@ -64,13 +64,26 @@ func (s *Schemas) MustImportAndCustomize(obj interface{}, f func(*Schema), exter
 		MustCustomizeType(obj, f)
 }
 
+func getType(obj interface{}) reflect.Type {
+	if t, ok := obj.(reflect.Type); ok {
+		return t
+	}
+
+	t := reflect.TypeOf(obj)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	return t
+}
+
 func (s *Schemas) Import(obj interface{}, externalOverrides ...interface{}) (*Schema, error) {
 	var types []reflect.Type
 	for _, override := range externalOverrides {
-		types = append(types, reflect.TypeOf(override))
+		types = append(types, getType(override))
 	}
 
-	return s.importType(reflect.TypeOf(obj), types...)
+	t := getType(obj)
+	return s.importType(t, types...)
 }
 
 func (s *Schemas) newSchemaFromType(t reflect.Type, typeName string) (*Schema, error) {
@@ -245,6 +258,8 @@ func (s *Schemas) readFields(schema *Schema, t reflect.Type) error {
 
 		schemaField := Field{
 			CodeName: field.Name,
+			Create:   true,
+			Update:   true,
 		}
 
 		fieldType := field.Type
@@ -307,6 +322,9 @@ func (s *Schemas) readFields(schema *Schema, t reflect.Type) error {
 	}
 
 	if hasType && hasMeta {
+		delete(schema.ResourceFields, "kind")
+		delete(schema.ResourceFields, "apiVersion")
+		delete(schema.ResourceFields, "metadata")
 		schema.CollectionMethods = []string{"GET", "POST"}
 		schema.ResourceMethods = []string{"GET", "PUT", "DELETE"}
 	}
@@ -344,7 +362,11 @@ func (s *Schemas) processFieldsMappers(t reflect.Type, fieldName string, schema 
 }
 
 func applyTag(structField *reflect.StructField, field *Field) error {
-	for _, part := range strings.Split(structField.Tag.Get("norman"), ",") {
+	t, ok := structField.Tag.Lookup("wrangler")
+	if !ok {
+		t = structField.Tag.Get("norman")
+	}
+	for _, part := range strings.Split(t, ",") {
 		if part == "" {
 			continue
 		}

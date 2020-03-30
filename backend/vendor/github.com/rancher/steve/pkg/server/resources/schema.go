@@ -11,19 +11,22 @@ import (
 	"github.com/rancher/steve/pkg/server/resources/apigroups"
 	"github.com/rancher/steve/pkg/server/resources/common"
 	"github.com/rancher/steve/pkg/server/resources/counts"
+	"github.com/rancher/steve/pkg/server/resources/userpreferences"
+	"github.com/rancher/steve/pkg/server/store/proxy"
 	"k8s.io/client-go/discovery"
 )
 
-func DefaultSchemas(baseSchema *types.APISchemas, discovery discovery.DiscoveryInterface, ccache clustercache.ClusterCache) *types.APISchemas {
+func DefaultSchemas(baseSchema *types.APISchemas, ccache clustercache.ClusterCache, cg proxy.ClientGetter) *types.APISchemas {
 	counts.Register(baseSchema, ccache)
 	subscribe.Register(baseSchema)
-	apigroups.Register(baseSchema, discovery)
 	apiroot.Register(baseSchema, []string{"v1"}, []string{"proxy:/apis"})
+	userpreferences.Register(baseSchema, cg)
 	return baseSchema
 }
 
-func DefaultSchemaTemplates(cf *client.Factory, lookup accesscontrol.AccessSetLookup) []schema.Template {
+func DefaultSchemaTemplates(cf *client.Factory, lookup accesscontrol.AccessSetLookup, discovery discovery.DiscoveryInterface) []schema.Template {
 	return []schema.Template{
 		common.DefaultTemplate(cf, lookup),
+		apigroups.Template(discovery),
 	}
 }

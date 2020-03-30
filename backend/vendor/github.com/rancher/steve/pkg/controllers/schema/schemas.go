@@ -18,13 +18,17 @@ import (
 	"golang.org/x/sync/semaphore"
 	authorizationv1 "k8s.io/api/authorization/v1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/discovery"
 	authorizationv1client "k8s.io/client-go/kubernetes/typed/authorization/v1"
 	apiv1 "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1"
 )
 
 var (
-	listPool = semaphore.NewWeighted(10)
+	listPool        = semaphore.NewWeighted(10)
+	typeNameChanges = map[string]string{
+		"extensions.v1beta1.ingress": "networking.k8s.io.v1beta1.ingress",
+	}
 )
 
 type SchemasHandler interface {
@@ -68,7 +72,7 @@ func Register(ctx context.Context,
 
 	return func() error {
 		h.queueRefresh()
-		return h.refreshAll()
+		return h.refreshAll(ctx)
 	}
 }
 
@@ -87,11 +91,24 @@ func (h *handler) queueRefresh() {
 
 	go func() {
 		time.Sleep(500 * time.Millisecond)
-		if err := h.refreshAll(); err != nil {
+		if err := h.refreshAll(h.ctx); err != nil {
 			logrus.Errorf("failed to sync schemas: %v", err)
 			atomic.StoreInt32(&h.toSync, 1)
 		}
 	}()
+}
+
+func isListOrGetable(schema *types.APISchema) bool {
+	for _, verb := range attributes.Verbs(schema) {
+		switch verb {
+		case "list":
+			return true
+		case "get":
+			return true
+		}
+	}
+
+	return false
 }
 
 func isListWatchable(schema *types.APISchema) bool {
@@ -116,7 +133,7 @@ func (h *handler) getColumns(ctx context.Context, schemas map[string]*types.APIS
 	eg := errgroup.Group{}
 
 	for _, schema := range schemas {
-		if !isListWatchable(schema) {
+		if !isListOrGetable(schema) {
 			continue
 		}
 
@@ -127,14 +144,14 @@ func (h *handler) getColumns(ctx context.Context, schemas map[string]*types.APIS
 		s := schema
 		eg.Go(func() error {
 			defer listPool.Release(1)
-			return h.cols.SetColumns(s)
+			return h.cols.SetColumns(ctx, s)
 		})
 	}
 
 	return eg.Wait()
 }
 
-func (h *handler) refreshAll() error {
+func (h *handler) refreshAll(ctx context.Context) error {
 	h.Lock()
 	defer h.Unlock()
 
@@ -149,15 +166,25 @@ func (h *handler) refreshAll() error {
 	}
 
 	filteredSchemas := map[string]*types.APISchema{}
-	for id, schema := range schemas {
+	for _, schema := range schemas {
 		if isListWatchable(schema) {
-			if ok, err := h.allowed(schema); err != nil {
+			if preferredTypeExists(schema, schemas) {
+				continue
+			}
+			if ok, err := h.allowed(ctx, schema); err != nil {
 				return err
 			} else if !ok {
 				continue
 			}
 		}
-		filteredSchemas[id] = schema
+
+		gvk := attributes.GVK(schema)
+		if gvk.Kind != "" {
+			gvr := attributes.GVR(schema)
+			schema.ID = converter.GVKToSchemaID(gvk)
+			schema.PluralName = converter.GVRToPluralName(gvr)
+		}
+		filteredSchemas[schema.ID] = schema
 	}
 
 	if err := h.getColumns(h.ctx, filteredSchemas); err != nil {
@@ -172,9 +199,31 @@ func (h *handler) refreshAll() error {
 	return nil
 }
 
-func (h *handler) allowed(schema *types.APISchema) (bool, error) {
+func preferredTypeExists(schema *types.APISchema, schemas map[string]*types.APISchema) bool {
+	if replacement, ok := typeNameChanges[schema.ID]; ok && schemas[replacement] != nil {
+		return true
+	}
+	pg := attributes.PreferredGroup(schema)
+	pv := attributes.PreferredVersion(schema)
+	if pg == "" && pv == "" {
+		return false
+	}
+
+	gvk := attributes.GVK(schema)
+	if pg != "" {
+		gvk.Group = pg
+	}
+	if pv != "" {
+		gvk.Version = pv
+	}
+
+	_, ok := schemas[converter.GVKToVersionedSchemaID(gvk)]
+	return ok
+}
+
+func (h *handler) allowed(ctx context.Context, schema *types.APISchema) (bool, error) {
 	gvr := attributes.GVR(schema)
-	ssar, err := h.ssar.Create(&authorizationv1.SelfSubjectAccessReview{
+	ssar, err := h.ssar.Create(ctx, &authorizationv1.SelfSubjectAccessReview{
 		Spec: authorizationv1.SelfSubjectAccessReviewSpec{
 			ResourceAttributes: &authorizationv1.ResourceAttributes{
 				Verb:     "list",
@@ -183,7 +232,7 @@ func (h *handler) allowed(schema *types.APISchema) (bool, error) {
 				Resource: gvr.Resource,
 			},
 		},
-	})
+	}, metav1.CreateOptions{})
 	if err != nil {
 		return false, err
 	}

@@ -31,15 +31,12 @@ type ListenOpts struct {
 	CAName            string
 	CertBackup        string
 	AcmeDomains       []string
+	BindHost          string
+	NoRedirect        bool
 	TLSListenerConfig dynamiclistener.Config
 }
 
 func ListenAndServe(ctx context.Context, httpsPort, httpPort int, handler http.Handler, opts *ListenOpts) error {
-	var (
-		// https listener will change this if http is enabled
-		targetHandler = handler
-	)
-
 	if opts == nil {
 		opts = &ListenOpts{}
 	}
@@ -52,28 +49,28 @@ func ListenAndServe(ctx context.Context, httpsPort, httpPort int, handler http.H
 	errorLog := log.New(logger.WriterLevel(logrus.DebugLevel), "", log.LstdFlags)
 
 	if httpsPort > 0 {
-		tlsTCPListener, err := dynamiclistener.NewTCPListener("0.0.0.0", httpsPort)
+		tlsTCPListener, err := dynamiclistener.NewTCPListener(opts.BindHost, httpsPort)
 		if err != nil {
 			return err
 		}
 
-		dynListener, dynHandler, err := getTLSListener(ctx, tlsTCPListener, *opts)
+		tlsTCPListener, handler, err = getTLSListener(ctx, tlsTCPListener, handler, *opts)
 		if err != nil {
 			return err
 		}
 
-		if dynHandler != nil {
-			targetHandler = wrapHandler(dynHandler, handler)
+		if !opts.NoRedirect {
+			handler = dynamiclistener.HTTPRedirect(handler)
 		}
+
 		tlsServer := http.Server{
-			Handler:  targetHandler,
+			Handler:  handler,
 			ErrorLog: errorLog,
 		}
-		targetHandler = dynamiclistener.HTTPRedirect(targetHandler)
 
 		go func() {
-			logrus.Infof("Listening on 0.0.0.0:%d", httpsPort)
-			err := tlsServer.Serve(dynListener)
+			logrus.Infof("Listening on %s:%d", opts.BindHost, httpsPort)
+			err := tlsServer.Serve(tlsTCPListener)
 			if err != http.ErrServerClosed && err != nil {
 				logrus.Fatalf("https server failed: %v", err)
 			}
@@ -86,12 +83,12 @@ func ListenAndServe(ctx context.Context, httpsPort, httpPort int, handler http.H
 
 	if httpPort > 0 {
 		httpServer := http.Server{
-			Addr:     fmt.Sprintf("0.0.0.0:%d", httpPort),
-			Handler:  targetHandler,
+			Addr:     fmt.Sprintf("%s:%d", opts.BindHost, httpPort),
+			Handler:  handler,
 			ErrorLog: errorLog,
 		}
 		go func() {
-			logrus.Infof("Listening on 0.0.0.0:%d", httpPort)
+			logrus.Infof("Listening on %s:%d", opts.BindHost, httpPort)
 			err := httpServer.ListenAndServe()
 			if err != http.ErrServerClosed && err != nil {
 				logrus.Fatalf("http server failed: %v", err)
@@ -106,17 +103,17 @@ func ListenAndServe(ctx context.Context, httpsPort, httpPort int, handler http.H
 	return nil
 }
 
-func getTLSListener(ctx context.Context, tcp net.Listener, opts ListenOpts) (net.Listener, http.Handler, error) {
+func getTLSListener(ctx context.Context, tcp net.Listener, handler http.Handler, opts ListenOpts) (net.Listener, http.Handler, error) {
 	if len(opts.TLSListenerConfig.TLSConfig.NextProtos) == 0 {
 		opts.TLSListenerConfig.TLSConfig.NextProtos = []string{"h2", "http/1.1"}
 	}
 
 	if len(opts.TLSListenerConfig.TLSConfig.Certificates) > 0 {
-		return tls.NewListener(tcp, opts.TLSListenerConfig.TLSConfig), nil, nil
+		return tls.NewListener(tcp, opts.TLSListenerConfig.TLSConfig), handler, nil
 	}
 
 	if len(opts.AcmeDomains) > 0 {
-		return acmeListener(tcp, opts), nil, nil
+		return acmeListener(tcp, handler, opts)
 	}
 
 	storage := opts.Storage
@@ -129,7 +126,12 @@ func getTLSListener(ctx context.Context, tcp net.Listener, opts ListenOpts) (net
 		return nil, nil, err
 	}
 
-	return dynamiclistener.NewListener(tcp, storage, caCert, caKey, opts.TLSListenerConfig)
+	listener, dynHandler, err := dynamiclistener.NewListener(tcp, storage, caCert, caKey, opts.TLSListenerConfig)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return listener, wrapHandler(dynHandler, handler), nil
 }
 
 func getCA(opts ListenOpts) (*x509.Certificate, crypto.Signer, error) {
@@ -186,7 +188,7 @@ func wrapHandler(handler http.Handler, next http.Handler) http.Handler {
 	})
 }
 
-func acmeListener(tcp net.Listener, opts ListenOpts) net.Listener {
+func acmeListener(tcp net.Listener, handler http.Handler, opts ListenOpts) (net.Listener, http.Handler, error) {
 	hosts := map[string]bool{}
 	for _, domain := range opts.AcmeDomains {
 		hosts[domain] = true
@@ -214,5 +216,5 @@ func acmeListener(tcp net.Listener, opts ListenOpts) net.Listener {
 		return manager.GetCertificate(hello)
 	}
 
-	return tls.NewListener(tcp, opts.TLSListenerConfig.TLSConfig)
+	return tls.NewListener(tcp, opts.TLSListenerConfig.TLSConfig), manager.HTTPHandler(handler), nil
 }

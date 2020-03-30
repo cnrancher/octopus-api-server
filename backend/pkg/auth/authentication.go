@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/rancher/k3s/pkg/clientaccess"
 	"github.com/rancher/steve/pkg/auth"
 	"k8s.io/apiserver/pkg/authentication/user"
 )
@@ -40,7 +39,7 @@ func (a *K3sAuthenticator) Authenticate(req *http.Request) (bool, string, error)
 	if tokenName != "admin" || tokenKey == "" {
 		return false, "", fmt.Errorf("must authenticate")
 	}
-	_, err := clientaccess.NormalizeAndValidateTokenForUser(a.server, tokenKey, tokenName)
+	_, err := NormalizeAndValidateTokenForUser(a.server, tokenKey, tokenName)
 	if err != nil {
 		return false, "", fmt.Errorf("must authenticate")
 	}
