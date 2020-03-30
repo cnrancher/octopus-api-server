@@ -18,8 +18,9 @@ spec:
       serviceAccountName: edge-api-controller-sa
       containers:
       - name: api-controller
-        image: guangbo/edge-api-controller:v0.0.1
+        image: guangbo/edge-api-controller:noauth
         command: ["edge-api-controller"]
         ports:
-        - containerPort: 8443
+        - name: https
+          containerPort: 8443
           protocol: TCP
