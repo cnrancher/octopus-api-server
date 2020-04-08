@@ -7,16 +7,16 @@ package main
 import (
 	"context"
 	"flag"
+	"github.com/cnrancher/edge-ui/backend/pkg/auth"
+	"github.com/cnrancher/edge-ui/backend/pkg/server/router"
 	"os"
 
-	"github.com/cnrancher/edge-ui/backend/pkg/auth"
 	"github.com/rancher/steve/pkg/debug"
 	steveserver "github.com/rancher/steve/pkg/server"
 	stevecli "github.com/rancher/steve/pkg/server/cli"
+	"github.com/rancher/steve/pkg/version"
 	"github.com/rancher/wrangler/pkg/kubeconfig"
 	"github.com/rancher/wrangler/pkg/ratelimit"
-
-	"github.com/rancher/steve/pkg/version"
 	"github.com/rancher/wrangler/pkg/signals"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -71,12 +71,17 @@ func newSteveServer(c stevecli.Config) (*steveserver.Server, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	restConfig.RateLimiter = ratelimit.None
 	a := auth.NewK3sAuthenticator(restConfig.Host)
-	return &steveserver.Server{RestConfig: restConfig,
+	handler := router.New(restConfig)
+
+	return &steveserver.Server{
+		RestConfig: restConfig,
 		AuthMiddleware: auth.ToAuthMiddleware(a),
 		DashboardURL: func() string {
 			return c.DashboardURL
 		},
+		Next: handler,
 	}, nil
 }
