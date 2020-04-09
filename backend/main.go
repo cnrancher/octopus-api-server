@@ -7,9 +7,13 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/cnrancher/edge-ui/backend/pkg/auth"
-	"github.com/cnrancher/edge-ui/backend/pkg/server/router"
 	"os"
+
+	"github.com/cnrancher/edge-ui/backend/pkg/auth"
+	edgeserver "github.com/cnrancher/edge-ui/backend/pkg/server"
+	"github.com/cnrancher/edge-ui/backend/pkg/server/router"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/rancher/steve/pkg/debug"
 	steveserver "github.com/rancher/steve/pkg/server"
@@ -66,18 +70,46 @@ func run(_ *cli.Context) error {
 	return s.ListenAndServe(ctx, steveConfig.HTTPSListenPort, steveConfig.HTTPListenPort, nil)
 }
 
+func initKubeClient(kubeconfig string) (*kubernetes.Clientset, error) {
+
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		logrus.Errorf("kubeconfig error %s\n", kubeconfig)
+		return nil, err
+	}
+
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		logrus.Errorf("kubernetes clientset create error: %s", err.Error)
+		return nil, err
+	}
+
+	return clientset, nil
+}
+
 func newSteveServer(c stevecli.Config) (*steveserver.Server, error) {
 	restConfig, err := kubeconfig.GetInteractiveClientConfig(c.KubeConfig).ClientConfig()
 	if err != nil {
 		return nil, err
 	}
 
+	client, err := initKubeClient(c.KubeConfig)
+	if err != nil {
+		return nil, err
+	}
+
 	restConfig.RateLimiter = ratelimit.None
+
 	a := auth.NewK3sAuthenticator(restConfig.Host)
-	handler := router.New(restConfig)
+	edgeServer := &edgeserver.EdgeServer{
+		RestConfig: restConfig,
+		Client:     client,
+	}
+
+	handler := router.New(edgeServer)
 
 	return &steveserver.Server{
-		RestConfig: restConfig,
+		RestConfig:     restConfig,
 		AuthMiddleware: auth.ToAuthMiddleware(a),
 		DashboardURL: func() string {
 			return c.DashboardURL
