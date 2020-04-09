@@ -100,7 +100,7 @@ func newSteveServer(c stevecli.Config) (*steveserver.Server, error) {
 
 	restConfig.RateLimiter = ratelimit.None
 
-	a := auth.NewK3sAuthenticator(restConfig.Host)
+	a := auth.NewK3sAuthenticator(restConfig.Host, restConfig.Password)
 	edgeServer := &edgeserver.EdgeServer{
 		RestConfig: restConfig,
 		Client:     client,

@@ -1,13 +1,16 @@
 package auth
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/sirupsen/logrus"
-	"net/http"
 )
 
 const (
-	issuer = "Edge-API"
+	issuer     = "Edge-API"
+	ttlSeconds = 604800
 )
 
 type CustomClaimsExample struct {
@@ -62,7 +65,7 @@ func (l *LoginHandler) ServeHTTP(writer http.ResponseWriter, req *http.Request) 
 	}
 
 	// create a token
-	tokenString, err := createToken(tokenName)
+	tokenString, err := createToken(tokenKey)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		writer.Write([]byte("Sorry, error while Signing Token!"))
@@ -77,11 +80,11 @@ func (l *LoginHandler) ServeHTTP(writer http.ResponseWriter, req *http.Request) 
 func createToken(key string) (string, error) {
 	// Create the Claims
 	claims := &jwt.StandardClaims{
-		ExpiresAt: 360000000000,
+		ExpiresAt: time.Now().Unix() + ttlSeconds,
 		Issuer:    issuer,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	// key need to be `your-256-bit-secret`
-	return token.SignedString([]byte("AllYourBase"))
+	return token.SignedString([]byte(key))
 }

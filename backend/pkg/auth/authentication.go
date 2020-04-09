@@ -29,7 +29,8 @@ func ToAuthMiddleware(a Authenticator) auth.Middleware {
 }
 
 type K3sAuthenticator struct {
-	server string
+	server   string
+	password string
 }
 
 func (a *K3sAuthenticator) Authenticate(req *http.Request) (bool, string, error) {
@@ -37,16 +38,16 @@ func (a *K3sAuthenticator) Authenticate(req *http.Request) (bool, string, error)
 	if tokenAuthValue == "" {
 		return false, "", fmt.Errorf("must authenticate")
 	}
-	err := validatToken(tokenAuthValue)
+	err := validatToken(tokenAuthValue, a.password)
 	if err != nil {
 		return false, "", err
 	}
 	return true, name, nil
 }
 
-func validatToken(tokenString string) error {
+func validatToken(tokenString string, pwd string) error {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return []byte("AllYourBase"), nil
+		return []byte(pwd), nil
 	})
 
 	if token.Valid {
@@ -67,8 +68,9 @@ func validatToken(tokenString string) error {
 	return nil
 }
 
-func NewK3sAuthenticator(endpoint string) Authenticator {
+func NewK3sAuthenticator(endpoint string, password string) Authenticator {
 	return &K3sAuthenticator{
-		server: endpoint,
+		server:   endpoint,
+		password: password,
 	}
 }
