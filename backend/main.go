@@ -7,6 +7,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
 
 	"github.com/cnrancher/edge-ui/backend/pkg/auth"
@@ -71,20 +72,17 @@ func run(_ *cli.Context) error {
 }
 
 func initKubeClient(kubeconfig string) (*kubernetes.Clientset, error) {
-
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
-		logrus.Errorf("kubeconfig error %s\n", kubeconfig)
-		return nil, err
+		return nil, fmt.Errorf("kubeconfig error %s\n", err.Error())
 	}
 
-	clientset, err := kubernetes.NewForConfig(config)
+	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		logrus.Errorf("kubernetes clientset create error: %s", err.Error)
-		return nil, err
+		return nil, fmt.Errorf("kubernetes clientset create error: %s", err.Error())
 	}
 
-	return clientset, nil
+	return clientSet, nil
 }
 
 func newSteveServer(c stevecli.Config) (*steveserver.Server, error) {
