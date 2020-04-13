@@ -18,7 +18,7 @@ spec:
       serviceAccountName: edge-api-controller-sa
       containers:
       - name: api-controller
-        image: guangbo/edge-api-controller:noauth
+        image: guangbo/edge-api-controller:latest
         command: ["edge-api-controller"]
         ports:
         - name: https

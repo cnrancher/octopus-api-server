@@ -64,7 +64,7 @@ func run(_ *cli.Context) error {
 
 	debugConfig.MustSetupDebug()
 
-	s, err := newSteveServer(steveConfig)
+	s, err := newSteveServer(steveConfig, ctx)
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func initKubeClient(kubeconfig string) (*kubernetes.Clientset, error) {
 	return clientSet, nil
 }
 
-func newSteveServer(c stevecli.Config) (*steveserver.Server, error) {
+func newSteveServer(c stevecli.Config, ctx context.Context) (*steveserver.Server, error) {
 	restConfig, err := kubeconfig.GetInteractiveClientConfig(c.KubeConfig).ClientConfig()
 	if err != nil {
 		return nil, err
@@ -98,10 +98,11 @@ func newSteveServer(c stevecli.Config) (*steveserver.Server, error) {
 
 	restConfig.RateLimiter = ratelimit.None
 
-	a := auth.NewK3sAuthenticator(restConfig.Host, restConfig.Password)
+	a := auth.NewK3sAuthenticator(restConfig.Host, client, ctx)
 	edgeServer := &edgeserver.EdgeServer{
 		RestConfig: restConfig,
 		Client:     client,
+		Context: ctx,
 	}
 
 	handler := router.New(edgeServer)

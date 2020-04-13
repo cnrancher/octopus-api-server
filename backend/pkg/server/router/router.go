@@ -15,7 +15,7 @@ func New(svr *server.EdgeServer) http.Handler {
 	r.UseEncodedPath()
 	r.Use(responsewriter.ContentTypeOptions)
 
-	r.Path("/v2/login").Handler(auth.NewLoginHandler(svr.RestConfig.Host))
-	r.Path("/v2/health/datastorage").Handler(extendapi.NewDataStorgeHealthHandler(svr.Client))
+	r.Path("/v2-public/auth").Handler(auth.NewAuthHandler(svr.RestConfig.Host, svr.Client, svr.Context))
+	r.Path("/v2-public/health/datastorage").Handler(extendapi.NewDataStorgeHealthHandler(svr.Client))
 	return r
 }
