@@ -1,4 +1,4 @@
-module github.com/cnrancher/edge-ui/backend
+module github.com/cnrancher/edge-api-server
 
 go 1.13
 

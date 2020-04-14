@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cnrancher/edge-ui/backend/pkg/util"
+	"github.com/cnrancher/edge-api-server/pkg/util"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

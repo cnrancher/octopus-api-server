@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: edge-api-controller
+  name: edge-api-server
   namespace: kube-system
   labels:
-    app: edge-api-controller
+    app: edge-api-server
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: edge-api-controller
+      app: edge-api-server
   template:
     metadata:
       labels:
-        app: edge-api-controller
+        app: edge-api-server
     spec:
-      serviceAccountName: edge-api-controller-sa
+      serviceAccountName: edge-api-server-sa
       containers:
       - name: api-controller
-        image: guangbo/edge-api-controller:latest
-        command: ["edge-api-controller"]
+        image: rancher/edge-api-server:latest
+        command: ["edge-api-server"]
         ports:
         - name: https
           containerPort: 8443

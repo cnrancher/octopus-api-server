@@ -19,11 +19,11 @@ RUN if [ "${ARCH}" == "amd64" ]; then \
 
 ENV GO111MODULE off
 ENV DAPPER_ENV REPO TAG DRONE_TAG
-ENV DAPPER_SOURCE /go/src/github.com/cnrancher/edge-ui/
-ENV DAPPER_OUTPUT ./backend/bin ./backend/dist
+ENV DAPPER_SOURCE /go/src/github.com/cnrancher/edge-api-server/
+ENV DAPPER_OUTPUT ./bin ./dist
 ENV DAPPER_DOCKER_SOCKET true
 ENV HOME ${DAPPER_SOURCE}
 WORKDIR ${DAPPER_SOURCE}
 
-ENTRYPOINT ["./backend/scripts/entry"]
+ENTRYPOINT ["./scripts/entry"]
 CMD ["ci"]

@@ -1,14 +1,14 @@
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: edge-api-controller-binding
+  name: edge-api-server-binding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: cluster-admin
 subjects:
 - kind: ServiceAccount
-  name: edge-api-controller-sa
+  name: edge-api-server-sa
   namespace: kube-system
 
 ---
@@ -16,7 +16,7 @@ subjects:
 kind: ServiceAccount
 apiVersion: v1
 metadata:
-  name: edge-api-controller-sa
+  name: edge-api-server-sa
   namespace: kube-system
   labels:
-    app: edge-api-controller
+    app: edge-api-server

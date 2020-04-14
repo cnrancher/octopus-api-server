@@ -3,9 +3,9 @@ package router
 import (
 	"net/http"
 
-	"github.com/cnrancher/edge-ui/backend/pkg/auth"
-	"github.com/cnrancher/edge-ui/backend/pkg/extendapi"
-	"github.com/cnrancher/edge-ui/backend/pkg/server"
+	"github.com/cnrancher/edge-api-server/pkg/auth"
+	"github.com/cnrancher/edge-api-server/pkg/extendapi"
+	"github.com/cnrancher/edge-api-server/pkg/server"
 	"github.com/gorilla/mux"
 	"github.com/rancher/steve/pkg/responsewriter"
 )

@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cnrancher/edge-ui/backend/pkg/auth"
-	edgeserver "github.com/cnrancher/edge-ui/backend/pkg/server"
-	"github.com/cnrancher/edge-ui/backend/pkg/server/router"
+	"github.com/cnrancher/edge-api-server/pkg/auth"
+	edgeserver "github.com/cnrancher/edge-api-server/pkg/server"
+	"github.com/cnrancher/edge-api-server/pkg/server/router"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -37,9 +37,9 @@ var (
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "edge-api-controller"
+	app.Name = "edge-api-server"
 	app.Version = version.FriendlyVersion()
-	app.Usage = "run k3s edge UI api!"
+	app.Usage = "run k3s edge UI api server!"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:        "kubeconfig",
@@ -102,7 +102,7 @@ func newSteveServer(c stevecli.Config, ctx context.Context) (*steveserver.Server
 	edgeServer := &edgeserver.EdgeServer{
 		RestConfig: restConfig,
 		Client:     client,
-		Context: ctx,
+		Context:    ctx,
 	}
 
 	handler := router.New(edgeServer)

@@ -4,6 +4,6 @@
 /dist
 *.swp
 .idea
-/backend/bin
-/backend/dist
-/backend/main
+/bin
+/dist
+/main

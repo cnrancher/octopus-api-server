@@ -16,10 +16,10 @@ spec:
     spec:
       containers:
       - name: edge-ui
-        image: guangbo/edge-ui:latest
+        image: rancher/edge-ui:latest
         env:
         - name: API
-          value: "https://edge-api-controller.kube-system:443"
+          value: "https://edge-api-server.kube-system:443"
         ports:
         - containerPort: 80
           protocol: TCP

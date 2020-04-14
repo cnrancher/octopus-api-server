@@ -6,9 +6,9 @@ source $(dirname $0)/version
 cd $(dirname $0)/..
 
 mkdir -p dist/artifacts
-cp bin/edge-api-controller dist/artifacts/edge-api-controller${SUFFIX}
+cp bin/edge-api-server dist/artifacts/edge-api-server${SUFFIX}
 
-IMAGE=${REPO}/edge-api-controller:${TAG}
+IMAGE=${REPO}/edge-api-server:${TAG}
 DOCKERFILE=package/Dockerfile
 if [ -e ${DOCKERFILE}.${ARCH} ]; then
     DOCKERFILE=${DOCKERFILE}.${ARCH}

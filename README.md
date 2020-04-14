@@ -1,7 +1,8 @@
-edge-ui backend
+edge-api-server
 ========
 
-## ***FILL THIS OUT WITH A USEFUL DESCRIPTION OF THIS REPO***
+This is the backend api server of the [Edge-UI](https://github.com/cnrancher/edge-ui).
+
 
 ## Building
 
@@ -10,7 +11,7 @@ edge-ui backend
 
 ## Running
 
-`./bin/edge-api-controller`
+`./bin/edge-api-server`
 
 ## License
 Copyright (c) 2019 [Rancher Labs, Inc.](http://rancher.com)

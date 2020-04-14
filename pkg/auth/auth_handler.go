@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cnrancher/edge-ui/backend/pkg/util"
+	"github.com/cnrancher/edge-api-server/pkg/util"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
