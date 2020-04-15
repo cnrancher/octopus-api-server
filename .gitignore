@@ -1,0 +1,9 @@
+/.dapper
+/.cache
+/bin
+/dist
+*.swp
+.idea
+/bin
+/dist
+/main
