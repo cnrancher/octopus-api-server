@@ -17,7 +17,7 @@ import (
 	apiext "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/api/equality"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -347,13 +347,6 @@ func (f *Factory) CreateCRDs(ctx context.Context, crds ...CRD) (map[schema.Group
 		return nil, nil
 	}
 
-	if ok, err := f.ensureAccess(ctx); err != nil {
-		return nil, err
-	} else if !ok {
-		logrus.Infof("No access to list CRDs, assuming CRDs are pre-created.")
-		return nil, err
-	}
-
 	crdStatus := map[schema.GroupVersionKind]*apiext.CustomResourceDefinition{}
 
 	ready, err := f.getReadyCRDs(ctx)
@@ -436,7 +429,6 @@ func (f *Factory) createCRD(ctx context.Context, crdDef CRD, ready map[string]*a
 	if ok {
 		if !equality.Semantic.DeepEqual(crd.Spec.Subresources, existing.Spec.Subresources) ||
 			!equality.Semantic.DeepEqual(crd.Spec.Validation, existing.Spec.Validation) ||
-			!equality.Semantic.DeepEqual(crd.Spec.AdditionalPrinterColumns, existing.Spec.AdditionalPrinterColumns) ||
 			!equality.Semantic.DeepEqual(crd.Spec.Versions, existing.Spec.Versions) {
 			existing.Spec = crd.Spec
 			logrus.Infof("Updating CRD %s", crd.Name)
@@ -446,21 +438,13 @@ func (f *Factory) createCRD(ctx context.Context, crdDef CRD, ready map[string]*a
 	}
 
 	logrus.Infof("Creating CRD %s", crd.Name)
-	if newCrd, err := f.CRDClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(ctx, &crd, metav1.CreateOptions{}); apierrors.IsAlreadyExists(err) {
+	if newCrd, err := f.CRDClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(ctx, &crd, metav1.CreateOptions{}); errors.IsAlreadyExists(err) {
 		return f.CRDClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get(ctx, crd.Name, metav1.GetOptions{})
 	} else if err != nil {
 		return nil, err
 	} else {
 		return newCrd, nil
 	}
-}
-
-func (f *Factory) ensureAccess(ctx context.Context) (bool, error) {
-	_, err := f.CRDClient.ApiextensionsV1beta1().CustomResourceDefinitions().List(ctx, metav1.ListOptions{})
-	if apierrors.IsForbidden(err) {
-		return false, nil
-	}
-	return true, err
 }
 
 func (f *Factory) getReadyCRDs(ctx context.Context) (map[string]*apiext.CustomResourceDefinition, error) {

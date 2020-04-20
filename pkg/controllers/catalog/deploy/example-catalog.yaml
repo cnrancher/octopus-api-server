@@ -1,0 +1,7 @@
+apiVersion: edgeapi.cattle.io/v1alpha1
+kind: Catalog
+metadata:
+  name: bitnami
+  namespace: kube-system
+spec:
+  url: https://charts.bitnami.com/bitnami

@@ -8,7 +8,7 @@ import (
 
 	"github.com/cnrancher/edge-api-server/pkg/auth"
 	"github.com/cnrancher/edge-api-server/pkg/controllers"
-	"github.com/cnrancher/edge-api-server/pkg/steve/pkg/fooapi"
+	"github.com/cnrancher/edge-api-server/pkg/steve/pkg/catalogapi"
 	steveserver "github.com/rancher/steve/pkg/server"
 	"github.com/rancher/wrangler/pkg/ratelimit"
 	"github.com/sirupsen/logrus"
@@ -82,13 +82,13 @@ func New(ctx context.Context, clientConfig clientcmd.ClientConfig, cfg *Config) 
 func newSteveServer(ctx context.Context, edgeServer *EdgeServer) (*steveserver.Server, error) {
 	a := auth.NewK3sAuthenticator(edgeServer.RestConfig.Host, edgeServer.ClientSet, ctx)
 	handler := SetupLocalHandler(edgeServer, a)
-	fooApiServer := &fooapi.Server{}
+	catalogApiServer := &catalogapi.Server{}
 	return &steveserver.Server{
 		RestConfig:     edgeServer.RestConfig,
 		AuthMiddleware: auth.ToAuthMiddleware(a),
 		Next:           handler,
 		StartHooks: []steveserver.StartHook{
-			fooApiServer.Setup,
+			catalogApiServer.Setup,
 		},
 	}, nil
 }

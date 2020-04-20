@@ -5,15 +5,13 @@ import (
 	"encoding/hex"
 	"fmt"
 	"sync"
-	"time"
-
-	"github.com/sirupsen/logrus"
 
 	gvk2 "github.com/rancher/wrangler/pkg/gvk"
 
 	"github.com/pkg/errors"
 	"github.com/rancher/wrangler/pkg/apply/injectors"
 	"github.com/rancher/wrangler/pkg/objectset"
+	errors2 "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -85,12 +83,8 @@ func (o *desiredSet) apply() error {
 	}
 
 	rl := o.getRateLimit(labelSet[LabelHash])
-	if rl != nil {
-		t := time.Now()
-		rl.Accept()
-		if d := time.Now().Sub(t); d.Seconds() > 1 {
-			logrus.Infof("rate limited %s(%s) %s", o.setID, labelSet, d)
-		}
+	if rl != nil && !rl.TryAccept() {
+		return errors2.NewConflict(schema.GroupResource{}, o.setID, errors.New("delaying object set"))
 	}
 
 	objList, err := o.injectLabelsAndAnnotations(labelSet, annotationSet)

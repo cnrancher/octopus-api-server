@@ -4,8 +4,8 @@ import (
 	"context"
 
 	edgev1Schema "github.com/cnrancher/edge-api-server/pkg/apis/edgeapi.cattle.io/v1alpha1/schema"
-	foocontroller "github.com/cnrancher/edge-api-server/pkg/controllers/foo"
-	foov1 "github.com/cnrancher/edge-api-server/pkg/generated/controllers/edgeapi.cattle.io"
+	catalogcontroller "github.com/cnrancher/edge-api-server/pkg/controllers/catalog"
+	v1 "github.com/cnrancher/edge-api-server/pkg/generated/controllers/edgeapi.cattle.io"
 	"github.com/rancher/wrangler/pkg/apply"
 	"github.com/rancher/wrangler/pkg/crd"
 	"github.com/rancher/wrangler/pkg/start"
@@ -16,7 +16,7 @@ import (
 
 func Setup(ctx context.Context, restConfig *rest.Config, clientSet *kubernetes.Clientset, threadiness int) error {
 
-	foos, err := foov1.NewFactoryFromConfig(restConfig)
+	factory, err := v1.NewFactoryFromConfig(restConfig)
 	if err != nil {
 		klog.Fatalf("Error building sample controllers: %s", err.Error())
 	}
@@ -27,9 +27,9 @@ func Setup(ctx context.Context, restConfig *rest.Config, clientSet *kubernetes.C
 
 	objectSetApply := apply.New(clientSet.DiscoveryClient, apply.NewClientFactory(restConfig))
 
-	foocontroller.Register(ctx, objectSetApply, foos.Edgeapi().V1alpha1().Foo())
+	catalogcontroller.Register(ctx, objectSetApply, factory.Edgeapi().V1alpha1().Catalog())
 
-	if err := start.All(ctx, threadiness, foos); err != nil {
+	if err := start.All(ctx, threadiness, factory); err != nil {
 		klog.Fatalf("Error starting: %s", err.Error())
 	}
 	return nil
@@ -41,8 +41,7 @@ func crds(ctx context.Context, config *rest.Config) error {
 		return err
 	}
 
-	factory.BatchCreateCRDs(ctx, crd.NonNamespacedTypes(
-		edgev1Schema.SetAndGetCRDName("Foo"))...)
-
+	factory.BatchCreateCRDs(ctx, crd.NamespacedTypes(
+		edgev1Schema.SetAndGetCRDName("Catalog"))...)
 	return factory.BatchWait()
 }

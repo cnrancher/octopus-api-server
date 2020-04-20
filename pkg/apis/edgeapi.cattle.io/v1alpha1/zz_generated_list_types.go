@@ -26,16 +26,16 @@ import (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// FooList is a list of Foo resources
-type FooList struct {
+// CatalogList is a list of Catalog resources
+type CatalogList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
 
-	Items []Foo `json:"items"`
+	Items []Catalog `json:"items"`
 }
 
-func NewFoo(namespace, name string, obj Foo) *Foo {
-	obj.APIVersion, obj.Kind = SchemeGroupVersion.WithKind("Foo").ToAPIVersionAndKind()
+func NewCatalog(namespace, name string, obj Catalog) *Catalog {
+	obj.APIVersion, obj.Kind = SchemeGroupVersion.WithKind("Catalog").ToAPIVersionAndKind()
 	obj.Name = name
 	obj.Namespace = namespace
 	return &obj

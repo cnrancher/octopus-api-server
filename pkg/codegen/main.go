@@ -17,7 +17,7 @@ func main() {
 		Groups: map[string]args.Group{
 			"edgeapi.cattle.io": {
 				Types: []interface{}{
-					v1alpha1.Foo{},
+					v1alpha1.Catalog{},
 				},
 				GenerateTypes: true,
 			},
