@@ -3,6 +3,7 @@ package urlbuilder
 import (
 	"bytes"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -21,11 +22,29 @@ func GetHost(r *http.Request, scheme string) string {
 	}
 
 	host = strings.Split(r.Header.Get(ForwardedHostHeader), ",")[0]
-	if host != "" {
+	if host == "" {
+		host = r.Host
+	}
+
+	port := r.Header.Get(ForwardedPortHeader)
+	if port == "" {
 		return host
 	}
 
-	return r.Host
+	if port == "80" && scheme == "http" {
+		return host
+	}
+
+	if port == "443" && scheme == "http" {
+		return host
+	}
+
+	hostname, _, err := net.SplitHostPort(host)
+	if err != nil {
+		hostname = host
+	}
+
+	return strings.Join([]string{hostname, port}, ":")
 }
 
 func GetScheme(r *http.Request) string {

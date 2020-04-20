@@ -6,7 +6,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"reflect"
 	"regexp"
 
 	"github.com/pkg/errors"
@@ -66,7 +65,7 @@ func decodeParams(apiOp *types.APIRequest, target runtime.Object) error {
 }
 
 func toAPI(schema *types.APISchema, obj runtime.Object) types.APIObject {
-	if obj == nil || reflect.ValueOf(obj).IsNil() {
+	if obj == nil {
 		return types.APIObject{}
 	}
 
@@ -142,9 +141,6 @@ func moveToUnderscore(obj *unstructured.Unstructured) *unstructured.Unstructured
 }
 
 func rowToObject(obj *unstructured.Unstructured) {
-	if obj == nil {
-		return
-	}
 	if obj.Object["kind"] != "Table" ||
 		obj.Object["apiVersion"] != "meta.k8s.io/v1" {
 		return

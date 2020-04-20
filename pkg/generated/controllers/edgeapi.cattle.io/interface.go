@@ -19,8 +19,10 @@ limitations under the License.
 package edgeapi
 
 import (
+	clientset "github.com/cnrancher/edge-api-server/pkg/generated/clientset/versioned"
 	v1alpha1 "github.com/cnrancher/edge-api-server/pkg/generated/controllers/edgeapi.cattle.io/v1alpha1"
-	"github.com/rancher/lasso/pkg/controller"
+	informers "github.com/cnrancher/edge-api-server/pkg/generated/informers/externalversions/edgeapi.cattle.io"
+	"github.com/rancher/wrangler/pkg/generic"
 )
 
 type Interface interface {
@@ -28,16 +30,21 @@ type Interface interface {
 }
 
 type group struct {
-	controllerFactory controller.SharedControllerFactory
+	controllerManager *generic.ControllerManager
+	informers         informers.Interface
+	client            clientset.Interface
 }
 
 // New returns a new Interface.
-func New(controllerFactory controller.SharedControllerFactory) Interface {
+func New(controllerManager *generic.ControllerManager, informers informers.Interface,
+	client clientset.Interface) Interface {
 	return &group{
-		controllerFactory: controllerFactory,
+		controllerManager: controllerManager,
+		informers:         informers,
+		client:            client,
 	}
 }
 
 func (g *group) V1alpha1() v1alpha1.Interface {
-	return v1alpha1.New(g.controllerFactory)
+	return v1alpha1.New(g.controllerManager, g.client.EdgeapiV1alpha1(), g.informers.V1alpha1())
 }
