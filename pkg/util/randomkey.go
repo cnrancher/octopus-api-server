@@ -3,6 +3,9 @@ package util
 import (
 	"crypto/rand"
 	"math/big"
+	rnd "math/rand"
+	"strings"
+	"time"
 )
 
 const (
@@ -22,4 +25,14 @@ func GenerateRandomKey() (string, error) {
 		key[i] = characters[r.Int64()]
 	}
 	return string(key), nil
+}
+
+func GenerateRandomTempKey(length int) string {
+	r := rnd.New(rnd.NewSource(time.Now().Unix()))
+	bytes := make([]byte, length)
+	for i := 0; i < length; i++ {
+		b := r.Intn(26) + 65
+		bytes[i] = byte(b)
+	}
+	return strings.ToLower(string(bytes))
 }
