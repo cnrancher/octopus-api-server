@@ -13,6 +13,8 @@ import (
 	"github.com/cnrancher/edge-api-server/pkg/auth"
 	edgeserver "github.com/cnrancher/edge-api-server/pkg/server"
 	"github.com/cnrancher/edge-api-server/pkg/server/router"
+
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -71,18 +73,22 @@ func run(_ *cli.Context) error {
 	return s.ListenAndServe(ctx, steveConfig.HTTPSListenPort, steveConfig.HTTPListenPort, nil)
 }
 
-func initKubeClient(kubeconfig string) (*kubernetes.Clientset, error) {
+func initKubeClient(kubeconfig string) (*kubernetes.Clientset, dynamic.Interface, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
-		return nil, fmt.Errorf("kubeconfig error %s\n", err.Error())
+		return nil, nil, fmt.Errorf("kubeconfig error %s\n", err.Error())
 	}
 
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return nil, fmt.Errorf("kubernetes clientset create error: %s", err.Error())
+		return nil, nil, fmt.Errorf("kubernetes clientset create error: %s", err.Error())
+	}
+	dynamicClient, err := dynamic.NewForConfig(config)
+	if err != nil {
+		return nil, nil, fmt.Errorf("kubernetes dynamic client create error:%s", err.Error())
 	}
 
-	return clientSet, nil
+	return clientSet, dynamicClient, nil
 }
 
 func newSteveServer(c stevecli.Config, ctx context.Context) (*steveserver.Server, error) {
@@ -91,7 +97,7 @@ func newSteveServer(c stevecli.Config, ctx context.Context) (*steveserver.Server
 		return nil, err
 	}
 
-	client, err := initKubeClient(c.KubeConfig)
+	client, dyclient, err := initKubeClient(c.KubeConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -102,6 +108,7 @@ func newSteveServer(c stevecli.Config, ctx context.Context) (*steveserver.Server
 	edgeServer := &edgeserver.EdgeServer{
 		RestConfig: restConfig,
 		Client:     client,
+		DyClient:   dyclient,
 		Context:    ctx,
 	}
 

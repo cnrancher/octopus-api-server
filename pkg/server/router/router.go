@@ -17,5 +17,6 @@ func New(svr *server.EdgeServer) http.Handler {
 
 	r.Path("/v2-public/auth").Handler(auth.NewAuthHandler(svr.RestConfig.Host, svr.Client, svr.Context))
 	r.Path("/v2-public/health/datastorage").Handler(extendapi.NewDataStorgeHealthHandler(svr.Client))
+	r.Path("/v2/devicetemplate").Handler(extendapi.NewDeviceTemplateHandler(svr.Client, svr.DyClient))
 	return r
 }
