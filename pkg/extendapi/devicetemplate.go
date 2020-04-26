@@ -43,12 +43,15 @@ type DeviceTemplateRequest struct {
 type DeviceTemplateHandler struct {
 	clientset *kubernetes.Clientset
 	dyclient  dynamic.Interface
+	auth      auth.Authenticator
 }
 
-func NewDeviceTemplateHandler(client *kubernetes.Clientset, dyclient dynamic.Interface) *DeviceTemplateHandler {
+func NewDeviceTemplateHandler(client *kubernetes.Clientset,
+	dyclient dynamic.Interface, a auth.Authenticator) *DeviceTemplateHandler {
 	return &DeviceTemplateHandler{
 		clientset: client,
 		dyclient:  dyclient,
+		auth:      a,
 	}
 }
 
@@ -56,14 +59,14 @@ func (h *DeviceTemplateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		logrus.Error("DeviceTemplateHandler request body error:", err.Error())
+		logrus.Error("DeviceTemplateHandler request error:", err.Error())
 		h.WriteResponse(w, err.Error())
 		return
 	}
 
-	user, err := h.GetAuthName(r)
-	if err != nil {
-		logrus.Error("DeviceTemplateHandler request GetAuthName error:", err.Error())
+	authed, user, err := h.auth.Authenticate(r)
+	if !authed || err != nil {
+		logrus.Error("DeviceTemplateHandler invalid user error:", err.Error())
 		h.WriteResponse(w, err.Error())
 		return
 	}
@@ -71,13 +74,13 @@ func (h *DeviceTemplateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 	var request DeviceTemplateRequest
 
 	if err := json.Unmarshal(body, &request); err != nil {
-		logrus.Error("DeviceTemplateHandler request body validate json error:", err.Error())
+		logrus.Error("DeviceTemplateHandler request validate json error:", err.Error())
 		h.WriteResponse(w, err.Error())
 		return
 	}
 
 	if err := h.validateRequest(request); err != nil {
-		logrus.Error("DeviceTemplateHandler request body validate error:", err.Error())
+		logrus.Error("DeviceTemplateHandler request validate error:", err.Error())
 		h.WriteResponse(w, err.Error())
 		return
 	}
@@ -130,21 +133,6 @@ func (h *DeviceTemplateHandler) validateRequest(req DeviceTemplateRequest) error
 	return nil
 }
 
-func (h *DeviceTemplateHandler) GetAuthName(r *http.Request) (string, error) {
-	tokenAuthValue := auth.GetTokenAuthFromRequest(r)
-	if tokenAuthValue == "" {
-		return "", errors.New("must authenticate")
-	}
-
-	tokenName, tokenKey := auth.SplitTokenParts(tokenAuthValue)
-
-	if tokenName == "" || tokenKey == "" {
-		return "", errors.New("must authenticate")
-	}
-
-	return tokenName, nil
-}
-
 func (h *DeviceTemplateHandler) WriteResponse(w http.ResponseWriter, msg string) {
 	io.WriteString(w, fmt.Sprintf(`{"msg":%s}`, msg))
 }
@@ -168,9 +156,13 @@ func (h *DeviceTemplateHandler) createSecret(ctx context.Context, req DeviceTemp
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        name,
-			Namespace:   req.Namespace,
-			Annotations: map[string]string{templateCreaterField: user, templateDeviceTypeField: req.DeviceType, templateNameField: req.TemplateName},
+			Name:      name,
+			Namespace: req.Namespace,
+			Annotations: map[string]string{
+				templateCreaterField:    user,
+				templateDeviceTypeField: req.DeviceType,
+				templateNameField:       req.TemplateName,
+			},
 		},
 		StringData: stringData,
 	}
