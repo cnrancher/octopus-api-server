@@ -6,34 +6,18 @@ package main
 
 import (
 	"context"
-	"flag"
-	"fmt"
 	"os"
 
-	"github.com/cnrancher/edge-api-server/pkg/auth"
-	edgeserver "github.com/cnrancher/edge-api-server/pkg/server"
-	"github.com/cnrancher/edge-api-server/pkg/server/router"
-
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-
+	"github.com/cnrancher/edge-api-server/pkg/server"
 	"github.com/rancher/steve/pkg/debug"
-	steveserver "github.com/rancher/steve/pkg/server"
-	stevecli "github.com/rancher/steve/pkg/server/cli"
 	"github.com/rancher/steve/pkg/version"
-	"github.com/rancher/wrangler/pkg/kubeconfig"
-	"github.com/rancher/wrangler/pkg/ratelimit"
 	"github.com/rancher/wrangler/pkg/signals"
-	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
+	"k8s.io/klog"
 )
 
 var (
-	Version     = "v0.0.1"
-	GitCommit   = "HEAD"
-	KubeConfig  string
-	steveConfig stevecli.Config
+	kubeConfig  string
 	debugConfig debug.Config
 )
 
@@ -41,85 +25,69 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "edge-api-server"
 	app.Version = version.FriendlyVersion()
-	app.Usage = "run k3s edge UI api server!"
+	app.Usage = "Run the edge api server of k3s"
+
+	var config server.Config
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:        "kubeconfig",
+			Usage:       "Kube config for accessing k8s cluster",
 			EnvVar:      "KUBECONFIG",
-			Destination: &KubeConfig,
+			Destination: &kubeConfig,
+		},
+		cli.StringFlag{
+			Name:        "namespace, n",
+			EnvVar:      "NAMESPACE",
+			Value:       "",
+			Usage:       "Namespace to watch, empty means it will watch CRDs in all namespaces.",
+			Destination: &config.Namespace,
+		},
+		cli.IntFlag{
+			Name:        "threads, t",
+			EnvVar:      "THREADS",
+			Value:       5,
+			Usage:       "Threadiness level to set, defaults to 2.",
+			Destination: &config.Threadiness,
+		},
+		cli.IntFlag{
+			Name:        "https-listen-port",
+			Value:       8443,
+			Destination: &config.HTTPSListenPort,
+		},
+		cli.IntFlag{
+			Name:        "http-listen-port",
+			Value:       8080,
+			Destination: &config.HTTPListenPort,
+		},
+		cli.StringFlag{
+			Name:        "dashboard-url",
+			Value:       "https://releases.rancher.com/dashboard/latest/index.html",
+			Destination: &config.DashboardURL,
 		},
 	}
-	app.Flags = append(
-		stevecli.Flags(&steveConfig),
-		debug.Flags(&debugConfig)...)
-	app.Action = run
+	app.Flags = append(app.Flags, debug.Flags(&debugConfig)...)
+	app.Action = func(c *cli.Context) error {
+		return run(c, config)
+	}
 	if err := app.Run(os.Args); err != nil {
-		logrus.Fatal(err)
+		klog.Fatal(err)
 	}
 }
 
-func run(_ *cli.Context) error {
-	flag.Parse()
+func run(cli *cli.Context, config server.Config) error {
+	debugConfig.MustSetupDebug()
+	klog.Infof("Edge api server version %s is starting", version.FriendlyVersion())
 
-	logrus.Info("Starting controller")
 	ctx := signals.SetupSignalHandler(context.Background())
 
-	debugConfig.MustSetupDebug()
-
-	s, err := newSteveServer(steveConfig, ctx)
+	clientConfig, err := server.GetConfig(kubeConfig)
 	if err != nil {
 		return err
 	}
-	return s.ListenAndServe(ctx, steveConfig.HTTPSListenPort, steveConfig.HTTPListenPort, nil)
-}
 
-func initKubeClient(kubeconfig string) (*kubernetes.Clientset, dynamic.Interface, error) {
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	server, err := server.New(ctx, clientConfig, &config)
 	if err != nil {
-		return nil, nil, fmt.Errorf("kubeconfig error %s\n", err.Error())
+		return err
 	}
-
-	clientSet, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, nil, fmt.Errorf("kubernetes clientset create error: %s", err.Error())
-	}
-	dynamicClient, err := dynamic.NewForConfig(config)
-	if err != nil {
-		return nil, nil, fmt.Errorf("kubernetes dynamic client create error:%s", err.Error())
-	}
-
-	return clientSet, dynamicClient, nil
-}
-
-func newSteveServer(c stevecli.Config, ctx context.Context) (*steveserver.Server, error) {
-	restConfig, err := kubeconfig.GetInteractiveClientConfig(c.KubeConfig).ClientConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	client, dyclient, err := initKubeClient(c.KubeConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	restConfig.RateLimiter = ratelimit.None
-
-	a := auth.NewK3sAuthenticator(restConfig.Host, client, ctx)
-	edgeServer := &edgeserver.EdgeServer{
-		RestConfig: restConfig,
-		Client:     client,
-		DyClient:   dyclient,
-		Context:    ctx,
-	}
-
-	handler := router.New(edgeServer)
-
-	return &steveserver.Server{
-		RestConfig:     restConfig,
-		AuthMiddleware: auth.ToAuthMiddleware(a),
-		DashboardURL: func() string {
-			return c.DashboardURL
-		},
-		Next: handler,
-	}, nil
+	return server.ListenAndServe(ctx)
 }

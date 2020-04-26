@@ -17,7 +17,7 @@ func NewDataStorgeHealthHandler(client *kubernetes.Clientset) *DataStorageHealth
 	}
 }
 
-// /v2/health/datastorage
+// get datastorage health check by /v2-public/health/datastorage
 func (h *DataStorageHealthHandler) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
 	var code int
 	h.clientset.RESTClient().Get().AbsPath("/healthz/etcd").Do(context.TODO()).StatusCode(&code)

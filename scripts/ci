@@ -4,7 +4,7 @@ set -e
 cd $(dirname $0)
 
 ./build
-./test
+./foo
 ./validate
 ./validate-ci
 ./package
