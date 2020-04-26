@@ -82,13 +82,13 @@ func New(ctx context.Context, clientConfig clientcmd.ClientConfig, cfg *Config) 
 func newSteveServer(ctx context.Context, edgeServer *EdgeServer) (*steveserver.Server, error) {
 	a := auth.NewK3sAuthenticator(edgeServer.RestConfig.Host, edgeServer.ClientSet, ctx)
 	handler := SetupLocalHandler(edgeServer, a)
-	testapiServer := &fooapi.Server{}
+	fooApiServer := &fooapi.Server{}
 	return &steveserver.Server{
 		RestConfig:     edgeServer.RestConfig,
 		AuthMiddleware: auth.ToAuthMiddleware(a),
 		Next:           handler,
 		StartHooks: []steveserver.StartHook{
-			testapiServer.Setup,
+			fooApiServer.Setup,
 		},
 	}, nil
 }

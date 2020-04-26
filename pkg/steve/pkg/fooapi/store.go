@@ -1,6 +1,8 @@
 package fooapi
 
 import (
+	"fmt"
+
 	"github.com/rancher/steve/pkg/schemaserver/types"
 )
 
@@ -19,6 +21,7 @@ func (s *Store) ByID(apiOp *types.APIRequest, schema *types.APISchema, id string
 }
 
 func (s *Store) Create(apiOp *types.APIRequest, schema *types.APISchema, data types.APIObject) (types.APIObject, error) {
+	fmt.Printf("call create", apiOp)
 	return s.Store.Create(apiOp, schema, data)
 }
 

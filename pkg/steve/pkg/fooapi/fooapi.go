@@ -37,7 +37,7 @@ func (s *Server) Setup(ctx context.Context, server *steveserver.Server) error {
 
 	server.SchemaTemplates = append(server.SchemaTemplates, schema.Template{
 		Store: Wrap(store),
-		ID:    "edgeapi.cattle.io.testchart",
+		ID:    "edgeapi.cattle.io.foo",
 		Formatter: func(request *types.APIRequest, resource *types.RawResource) {
 			resource.AddAction(request, "refresh")
 			resource.Schema.ActionHandlers = map[string]http.Handler{
