@@ -178,7 +178,7 @@ func (h *DeviceTemplateHandler) validTemplate(ctx context.Context, req DeviceTem
 
 	tempStr := util.GenerateRandomTempKey(7)
 
-	name := fmt.Sprintf("testdevicelink-%s", tempStr)
+	name := fmt.Sprintf("devicetemplate-%s", tempStr)
 
 	obj := unstructured.Unstructured{
 		Object: map[string]interface{}{
