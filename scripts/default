@@ -4,5 +4,5 @@ set -e
 cd $(dirname $0)
 
 ./build
-./foo
+./test
 ./package
