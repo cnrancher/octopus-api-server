@@ -78,7 +78,7 @@ func GetJWTSecretTokenName(token string) (string, error) {
 	if err != nil {
 		return name, err
 	}
-	name = strings.Trim(strings.ToLower(parts[2]), "_")
+	name = strings.TrimRight(strings.ToLower(parts[2]), "_")
 	name = name[len(name)-nameLength:]
 	return fmt.Sprintf("jwt-%s-secret", name), nil
 }

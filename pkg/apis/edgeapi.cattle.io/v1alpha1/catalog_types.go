@@ -20,7 +20,7 @@ type Catalog struct {
 type CatalogSpec struct {
 	URL       string     `json:"url"`
 	Username  string     `json:"username,omitempty"`
-	Password  string     `json:"password,omitempty" norman:"type=password"`
+	Password  string     `json:"password,omitempty"`
 	IndexFile *IndexFile `json:"indexFile" yaml:"indexFile"`
 }
 

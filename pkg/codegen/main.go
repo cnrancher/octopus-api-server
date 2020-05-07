@@ -18,6 +18,7 @@ func main() {
 			"edgeapi.cattle.io": {
 				Types: []interface{}{
 					v1alpha1.Catalog{},
+					v1alpha1.DeviceTemplate{},
 				},
 				GenerateTypes: true,
 			},

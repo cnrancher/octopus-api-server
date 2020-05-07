@@ -3,24 +3,15 @@ package catalogapi
 import (
 	"github.com/cnrancher/edge-api-server/pkg/apis/edgeapi.cattle.io/v1alpha1"
 	catalogcontroller "github.com/cnrancher/edge-api-server/pkg/generated/controllers/edgeapi.cattle.io/v1alpha1"
+	"github.com/rancher/steve/pkg/accesscontrol"
 	"github.com/rancher/steve/pkg/schemaserver/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type Store struct {
 	types.Store
+	asl        accesscontrol.AccessSetLookup
 	controller catalogcontroller.CatalogController
-}
-
-func Wrap(store types.Store, c catalogcontroller.CatalogController) types.Store {
-	return &Store{
-		store,
-		c,
-	}
-}
-
-func (s *Store) ByID(apiOp *types.APIRequest, schema *types.APISchema, id string) (types.APIObject, error) {
-	return s.Store.ByID(apiOp, schema, id)
 }
 
 func (s *Store) Create(apiOp *types.APIRequest, schema *types.APISchema, data types.APIObject) (types.APIObject, error) {
@@ -48,10 +39,6 @@ func (s *Store) Create(apiOp *types.APIRequest, schema *types.APISchema, data ty
 		}
 	}
 	return data, nil
-}
-
-func (s *Store) Update(apiOp *types.APIRequest, schema *types.APISchema, data types.APIObject, id string) (types.APIObject, error) {
-	return s.Store.Update(apiOp, schema, data, id)
 }
 
 func (s *Store) refreshCatalog(catalog *v1alpha1.Catalog) (err error) {

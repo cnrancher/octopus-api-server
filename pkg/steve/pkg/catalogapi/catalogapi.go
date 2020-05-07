@@ -3,11 +3,11 @@ package catalogapi
 import (
 	"context"
 
-	v1 "github.com/cnrancher/edge-api-server/pkg/generated/controllers/edgeapi.cattle.io"
-	"github.com/rancher/steve/pkg/server/store/proxy"
-	"k8s.io/klog"
+	"github.com/sirupsen/logrus"
 
+	v1 "github.com/cnrancher/edge-api-server/pkg/generated/controllers/edgeapi.cattle.io"
 	"github.com/rancher/steve/pkg/schema"
+	"github.com/rancher/steve/pkg/server/store/proxy"
 
 	"github.com/rancher/steve/pkg/accesscontrol"
 	"github.com/rancher/steve/pkg/auth"
@@ -31,14 +31,19 @@ func (s *Server) Setup(ctx context.Context, server *steveserver.Server) error {
 	s.auth = server.AuthMiddleware
 	s.cf = server.ClientFactory
 	s.schemas = server.BaseSchemas
-	store := proxy.NewProxyStore(s.cf, s.asl)
 
+	store := proxy.NewProxyStore(s.cf, s.asl)
 	controllers, err := v1.NewFactoryFromConfig(server.RestConfig)
 	if err != nil {
-		klog.Fatalf("Error building controllers: %s", err.Error())
+		logrus.Fatalf("Error building controllers: %s", err.Error())
+	}
+	store = &Store{
+		Store:      store,
+		asl:        s.asl,
+		controller: controllers.Edgeapi().V1alpha1().Catalog(),
 	}
 	server.SchemaTemplates = append(server.SchemaTemplates, schema.Template{
-		Store: Wrap(store, controllers.Edgeapi().V1alpha1().Catalog()),
+		Store: store,
 		ID:    "edgeapi.cattle.io.catalog",
 		Formatter: func(request *types.APIRequest, resource *types.RawResource) {
 			resource.AddAction(request, "refresh")
