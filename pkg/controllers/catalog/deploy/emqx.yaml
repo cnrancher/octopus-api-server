@@ -2,7 +2,7 @@ apiVersion: helm.cattle.io/v1
 kind: HelmChart
 metadata:
   name: my-mqtt
-  namespace: kube-system
+  namespace: default
 spec:
   chart: emqx
   repo: http://charts.cnrancher.cn/mqtt

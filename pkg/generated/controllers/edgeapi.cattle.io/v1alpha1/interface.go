@@ -20,30 +20,33 @@ package v1alpha1
 
 import (
 	v1alpha1 "github.com/cnrancher/edge-api-server/pkg/apis/edgeapi.cattle.io/v1alpha1"
-	clientset "github.com/cnrancher/edge-api-server/pkg/generated/clientset/versioned/typed/edgeapi.cattle.io/v1alpha1"
-	informers "github.com/cnrancher/edge-api-server/pkg/generated/informers/externalversions/edgeapi.cattle.io/v1alpha1"
-	"github.com/rancher/wrangler/pkg/generic"
+	"github.com/rancher/lasso/pkg/controller"
+	"github.com/rancher/wrangler/pkg/schemes"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
+
+func init() {
+	v1alpha1.AddToScheme(schemes.All)
+}
 
 type Interface interface {
 	Catalog() CatalogController
+	DeviceTemplate() DeviceTemplateController
 }
 
-func New(controllerManager *generic.ControllerManager, client clientset.EdgeapiV1alpha1Interface,
-	informers informers.Interface) Interface {
+func New(controllerFactory controller.SharedControllerFactory) Interface {
 	return &version{
-		controllerManager: controllerManager,
-		client:            client,
-		informers:         informers,
+		controllerFactory: controllerFactory,
 	}
 }
 
 type version struct {
-	controllerManager *generic.ControllerManager
-	informers         informers.Interface
-	client            clientset.EdgeapiV1alpha1Interface
+	controllerFactory controller.SharedControllerFactory
 }
 
 func (c *version) Catalog() CatalogController {
-	return NewCatalogController(v1alpha1.SchemeGroupVersion.WithKind("Catalog"), c.controllerManager, c.client, c.informers.Catalogs())
+	return NewCatalogController(schema.GroupVersionKind{Group: "edgeapi.cattle.io", Version: "v1alpha1", Kind: "Catalog"}, "catalogs", c.controllerFactory)
+}
+func (c *version) DeviceTemplate() DeviceTemplateController {
+	return NewDeviceTemplateController(schema.GroupVersionKind{Group: "edgeapi.cattle.io", Version: "v1alpha1", Kind: "DeviceTemplate"}, "devicetemplates", c.controllerFactory)
 }

@@ -1,0 +1,7 @@
+apiVersion: edgeapi.cattle.io/v1alpha1
+kind: Catalog
+metadata:
+  name: mqtt-libraray
+  namespace: kube-system
+spec:
+  url: http://charts.cnrancher.cn/mqtt

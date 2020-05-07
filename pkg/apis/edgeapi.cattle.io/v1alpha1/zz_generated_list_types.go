@@ -40,3 +40,20 @@ func NewCatalog(namespace, name string, obj Catalog) *Catalog {
 	obj.Namespace = namespace
 	return &obj
 }
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// DeviceTemplateList is a list of DeviceTemplate resources
+type DeviceTemplateList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+
+	Items []DeviceTemplate `json:"items"`
+}
+
+func NewDeviceTemplate(namespace, name string, obj DeviceTemplate) *DeviceTemplate {
+	obj.APIVersion, obj.Kind = SchemeGroupVersion.WithKind("DeviceTemplate").ToAPIVersionAndKind()
+	obj.Name = name
+	obj.Namespace = namespace
+	return &obj
+}
