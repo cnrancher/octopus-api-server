@@ -9,6 +9,15 @@ mkdir -p bin
 if [ "$(uname)" = "Linux" ]; then
     OTHER_LINKFLAGS="-extldflags -static -s"
 fi
+
+if echo "$VERSION" | grep -q -e '^v.*' ; then
+    UI_INDEX="local"
+fi
+UI_INDEX=${UI_INDEX:-"https://rancheredge.s3-ap-northeast-2.amazonaws.com/ui/latest/index.html"}
+
+# Inject Setting values
+DEFAULT_VALUES="{\"ui-index\":\"${UI_INDEX}\"}"
+
 LINKFLAGS="-X github.com/cnrancher/edge-api-server.Version=$VERSION"
 LINKFLAGS="-X github.com/cnrancher/edge-api-server.GitCommit=$COMMIT $LINKFLAGS"
 CGO_ENABLED=0 go build -ldflags "$LINKFLAGS $OTHER_LINKFLAGS" -o bin/edge-api-server

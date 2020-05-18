@@ -28,8 +28,6 @@ steps:
     files:
     - "dist/artifacts/*"
   when:
-    instance:
-    - drone-publish.rancher.io
     ref:
     - refs/head/master
     - refs/tags/*
@@ -42,19 +40,19 @@ steps:
     dockerfile: package/Dockerfile
     password:
       from_secret: docker_password
-    repo: "cnrancher/edge-api-server"
+    repo:
+      from_secret: image_repo
     tag: "${DRONE_TAG}-amd64"
     username:
       from_secret: docker_username
   when:
-    instance:
-    - drone-publish.rancher.io
     ref:
     - refs/head/master
     - refs/tags/*
     event:
     - tag
-
+node:
+  instance: agent-amd64
 volumes:
 - name: docker
   host:
@@ -90,8 +88,6 @@ steps:
     files:
     - "dist/artifacts/*"
   when:
-    instance:
-    - drone-publish.rancher.io
     ref:
     - refs/head/master
     - refs/tags/*
@@ -104,19 +100,19 @@ steps:
     dockerfile: package/Dockerfile
     password:
       from_secret: docker_password
-    repo: "cnrancher/edge-api-server"
+    repo:
+      from_secret: image_repo
     tag: "${DRONE_TAG}-arm64"
     username:
       from_secret: docker_username
   when:
-    instance:
-    - drone-publish.rancher.io
     ref:
     - refs/head/master
     - refs/tags/*
     event:
     - tag
-
+node:
+  instance: agent-arm64
 volumes:
 - name: docker
   host:
@@ -152,8 +148,6 @@ steps:
     files:
     - "dist/artifacts/*"
   when:
-    instance:
-    - drone-publish.rancher.io
     ref:
     - refs/head/master
     - refs/tags/*
@@ -166,19 +160,19 @@ steps:
     dockerfile: package/Dockerfile
     password:
       from_secret: docker_password
-    repo: "cnrancher/edge-api-server"
+    repo:
+      from_secret: image_repo
     tag: "${DRONE_TAG}-arm"
     username:
       from_secret: docker_username
   when:
-    instance:
-    - drone-publish.rancher.io
     ref:
     - refs/head/master
     - refs/tags/*
     event:
     - tag
-
+node:
+  instance: agent-arm
 volumes:
 - name: docker
   host:
@@ -207,14 +201,13 @@ steps:
     target: "cnrancher/edge-api-server:${DRONE_TAG}"
     template: "cnrancher/edge-api-server:${DRONE_TAG}-ARCH"
   when:
-    instance:
-    - drone-publish.rancher.io
     ref:
     - refs/head/master
     - refs/tags/*
     event:
     - tag
-
+node:
+  instance: agent-amd64
 depends_on:
 - amd64
 - arm64

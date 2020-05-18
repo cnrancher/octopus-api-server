@@ -57,3 +57,20 @@ func NewDeviceTemplate(namespace, name string, obj DeviceTemplate) *DeviceTempla
 	obj.Namespace = namespace
 	return &obj
 }
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// SettingList is a list of Setting resources
+type SettingList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+
+	Items []Setting `json:"items"`
+}
+
+func NewSetting(namespace, name string, obj Setting) *Setting {
+	obj.APIVersion, obj.Kind = SchemeGroupVersion.WithKind("Setting").ToAPIVersionAndKind()
+	obj.Name = name
+	obj.Namespace = namespace
+	return &obj
+}

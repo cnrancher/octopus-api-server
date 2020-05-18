@@ -32,6 +32,7 @@ func init() {
 type Interface interface {
 	Catalog() CatalogController
 	DeviceTemplate() DeviceTemplateController
+	Setting() SettingController
 }
 
 func New(controllerFactory controller.SharedControllerFactory) Interface {
@@ -49,4 +50,7 @@ func (c *version) Catalog() CatalogController {
 }
 func (c *version) DeviceTemplate() DeviceTemplateController {
 	return NewDeviceTemplateController(schema.GroupVersionKind{Group: "edgeapi.cattle.io", Version: "v1alpha1", Kind: "DeviceTemplate"}, "devicetemplates", c.controllerFactory)
+}
+func (c *version) Setting() SettingController {
+	return NewSettingController(schema.GroupVersionKind{Group: "edgeapi.cattle.io", Version: "v1alpha1", Kind: "Setting"}, "settings", c.controllerFactory)
 }
