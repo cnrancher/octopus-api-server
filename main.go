@@ -46,7 +46,7 @@ func main() {
 			Name:        "threads, t",
 			EnvVar:      "THREADS",
 			Value:       5,
-			Usage:       "Threadiness level to set, defaults to 2.",
+			Usage:       "Threadiness level to set, defaults to 5.",
 			Destination: &config.Threadiness,
 		},
 		cli.IntFlag{
@@ -58,11 +58,6 @@ func main() {
 			Name:        "http-listen-port",
 			Value:       8080,
 			Destination: &config.HTTPListenPort,
-		},
-		cli.StringFlag{
-			Name:        "dashboard-url",
-			Value:       "https://releases.rancher.com/dashboard/latest/index.html",
-			Destination: &config.DashboardURL,
 		},
 	}
 	app.Flags = append(app.Flags, debug.Flags(&debugConfig)...)
@@ -85,9 +80,9 @@ func run(cli *cli.Context, config server.Config) error {
 		return err
 	}
 
-	server, err := server.New(ctx, clientConfig, &config)
+	s, err := server.New(ctx, clientConfig, &config)
 	if err != nil {
 		return err
 	}
-	return server.ListenAndServe(ctx)
+	return s.ListenAndServe(ctx)
 }

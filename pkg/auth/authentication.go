@@ -22,18 +22,18 @@ type Authenticator interface {
 	Authenticate(req *http.Request) (authed bool, user string, err error)
 }
 
-func NewK3sAuthenticator(endpoint string, client *kubernetes.Clientset, ctx context.Context) Authenticator {
+func NewK3sAuthenticator(ctx context.Context, endpoint string, client *kubernetes.Clientset) Authenticator {
 	return &K3sAuthenticator{
+		context:   ctx,
 		server:    endpoint,
 		clientset: client,
-		context:   ctx,
 	}
 }
 
 type K3sAuthenticator struct {
+	context   context.Context
 	server    string
 	clientset *kubernetes.Clientset
-	context   context.Context
 }
 
 func ToAuthMiddleware(a Authenticator) auth.Middleware {
@@ -107,5 +107,4 @@ func (a *K3sAuthenticator) validJWTToken(tokenString string, secret *corev1.Secr
 		}
 		return fmt.Errorf("couldn't handle this token: %s", err)
 	}
-	return nil
 }

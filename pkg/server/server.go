@@ -6,14 +6,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/cnrancher/edge-api-server/pkg/steve/pkg/devicetemplateapi"
-
-	"github.com/rancher/steve/pkg/accesscontrol"
-	"github.com/rancher/steve/pkg/server"
-
 	"github.com/cnrancher/edge-api-server/pkg/auth"
 	"github.com/cnrancher/edge-api-server/pkg/controllers"
+	"github.com/cnrancher/edge-api-server/pkg/settings"
 	"github.com/cnrancher/edge-api-server/pkg/steve/pkg/catalogapi"
+	"github.com/cnrancher/edge-api-server/pkg/steve/pkg/devicetemplateapi"
+	"github.com/rancher/steve/pkg/accesscontrol"
+	"github.com/rancher/steve/pkg/server"
 	steveserver "github.com/rancher/steve/pkg/server"
 	"github.com/rancher/wrangler/pkg/ratelimit"
 	"github.com/sirupsen/logrus"
@@ -29,7 +28,6 @@ type Config struct {
 	Threadiness     int
 	HTTPListenPort  int
 	HTTPSListenPort int
-	DashboardURL    string
 }
 
 type EdgeServer struct {
@@ -46,11 +44,6 @@ type EdgeServer struct {
 
 func (s *EdgeServer) ListenAndServe(ctx context.Context) error {
 	server, err := newSteveServer(ctx, s)
-	if err != nil {
-		return err
-	}
-
-	err = controllers.Setup(ctx, s.RestConfig, s.ClientSet, s.Config.Threadiness)
 	if err != nil {
 		return err
 	}
@@ -85,6 +78,11 @@ func New(ctx context.Context, clientConfig clientcmd.ClientConfig, cfg *Config) 
 
 	asl := accesscontrol.NewAccessStore(ctx, true, steveControllers.RBAC)
 
+	err = controllers.Setup(ctx, restConfig, clientSet, 5)
+	if err != nil {
+		return nil, err
+	}
+
 	return &EdgeServer{
 		Controllers:   steveControllers,
 		Config:        *cfg,
@@ -98,11 +96,11 @@ func New(ctx context.Context, clientConfig clientcmd.ClientConfig, cfg *Config) 
 
 func newSteveServer(ctx context.Context, edgeServer *EdgeServer) (*steveserver.Server, error) {
 
-	a := auth.NewK3sAuthenticator(edgeServer.RestConfig.Host, edgeServer.ClientSet, ctx)
+	a := auth.NewK3sAuthenticator(ctx, edgeServer.RestConfig.Host, edgeServer.ClientSet)
 	handler := SetupLocalHandler(edgeServer)
 
-	catalogApiServer := &catalogapi.Server{}
-	deviceTemplateApiServer := &devicetemplateapi.Server{Authenticator: a}
+	catalogAPIServer := &catalogapi.Server{}
+	deviceTemplateAPIServer := &devicetemplateapi.Server{Authenticator: a}
 
 	return &steveserver.Server{
 		Controllers:     edgeServer.Controllers,
@@ -110,9 +108,15 @@ func newSteveServer(ctx context.Context, edgeServer *EdgeServer) (*steveserver.S
 		RestConfig:      edgeServer.RestConfig,
 		AuthMiddleware:  auth.ToAuthMiddleware(a),
 		Next:            handler,
+		DashboardURL: func() string {
+			if settings.UIIndex.Get() == "local" {
+				return settings.UIPath.Get()
+			}
+			return settings.UIIndex.Get()
+		},
 		StartHooks: []steveserver.StartHook{
-			catalogApiServer.Setup,
-			deviceTemplateApiServer.Setup,
+			catalogAPIServer.Setup,
+			deviceTemplateAPIServer.Setup,
 		},
 	}, nil
 }

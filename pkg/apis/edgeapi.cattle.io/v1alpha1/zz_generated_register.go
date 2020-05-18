@@ -30,6 +30,7 @@ import (
 var (
 	CatalogResourceName        = "catalogs"
 	DeviceTemplateResourceName = "devicetemplates"
+	SettingResourceName        = "settings"
 )
 
 // SchemeGroupVersion is group version used to register these objects
@@ -57,6 +58,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&CatalogList{},
 		&DeviceTemplate{},
 		&DeviceTemplateList{},
+		&Setting{},
+		&SettingList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil
