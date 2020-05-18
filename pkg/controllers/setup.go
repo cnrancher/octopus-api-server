@@ -3,6 +3,8 @@ package controllers
 import (
 	"context"
 
+	"github.com/cnrancher/edge-api-server/pkg/controllers/settings"
+
 	edgev1Schema "github.com/cnrancher/edge-api-server/pkg/apis/edgeapi.cattle.io/v1alpha1/schema"
 	"github.com/cnrancher/edge-api-server/pkg/controllers/catalog"
 	"github.com/cnrancher/edge-api-server/pkg/controllers/devicetemplate"
@@ -30,6 +32,7 @@ func Setup(ctx context.Context, restConfig *rest.Config, clientSet *kubernetes.C
 
 	catalog.Register(ctx, objectSetApply, factory.Edgeapi().V1alpha1().Catalog())
 	devicetemplate.Register(ctx, objectSetApply, factory.Edgeapi().V1alpha1().DeviceTemplate())
+	settings.Register(ctx, factory.Edgeapi().V1alpha1().Setting())
 
 	if err := start.All(ctx, threadiness, factory); err != nil {
 		klog.Fatalf("Error starting: %s", err.Error())
@@ -46,5 +49,9 @@ func crds(ctx context.Context, config *rest.Config) error {
 	factory.BatchCreateCRDs(ctx, crd.NamespacedTypes(
 		edgev1Schema.SetAndGetCRDName("Catalog"),
 		edgev1Schema.SetAndGetCRDName("DeviceTemplate"))...)
+
+	factory.BatchCreateCRDs(ctx, crd.NonNamespacedTypes(
+		edgev1Schema.SetAndGetCRDName("Setting"))...)
+
 	return factory.BatchWait()
 }

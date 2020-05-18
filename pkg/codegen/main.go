@@ -19,6 +19,7 @@ func main() {
 				Types: []interface{}{
 					v1alpha1.Catalog{},
 					v1alpha1.DeviceTemplate{},
+					v1alpha1.Setting{},
 				},
 				GenerateTypes: true,
 			},

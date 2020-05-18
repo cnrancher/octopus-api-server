@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -23,21 +22,21 @@ const (
 )
 
 // NewHandler creates a new AuthHandler
-func NewAuthHandler(host string, client *kubernetes.Clientset, ctx context.Context) *AuthHandler {
-	return &AuthHandler{
+func NewAuthHandler(ctx context.Context, host string, client *kubernetes.Clientset) *Handler {
+	return &Handler{
+		context:   ctx,
 		Host:      host,
 		clientset: client,
-		context:   ctx,
 	}
 }
 
-type AuthHandler struct {
+type Handler struct {
+	context   context.Context
 	Host      string
 	clientset *kubernetes.Clientset
-	context   context.Context
 }
 
-func (h *AuthHandler) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
+func (h *Handler) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
 	action := strings.ToLower(req.URL.Query().Get(actionQuery))
 
 	tokenAuthValue := GetTokenAuthFromRequest(req)
@@ -94,7 +93,7 @@ func (h *AuthHandler) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
 	return
 }
 
-func (h *AuthHandler) removeTokenSecret(token string) error {
+func (h *Handler) removeTokenSecret(token string) error {
 	name, err := GetJWTSecretTokenName(token)
 	if err != nil {
 		return err
@@ -102,7 +101,7 @@ func (h *AuthHandler) removeTokenSecret(token string) error {
 	return h.clientset.CoreV1().Secrets(tokenNamespace).Delete(h.context, name, metav1.DeleteOptions{})
 }
 
-func (h *AuthHandler) createToken(name string) (string, error) {
+func (h *Handler) createToken(name string) (string, error) {
 	// Create the Claims
 	claims := &jwt.StandardClaims{
 		ExpiresAt: time.Now().Unix() + ttlSeconds,
@@ -119,7 +118,7 @@ func (h *AuthHandler) createToken(name string) (string, error) {
 
 	strToken, err := token.SignedString([]byte(key))
 	if err != nil {
-		fmt.Errorf("failed to sign a JWT token, error: %s", err.Error())
+		logrus.Errorf("failed to sign a JWT token, error: %s", err.Error())
 		return "", err
 	}
 
