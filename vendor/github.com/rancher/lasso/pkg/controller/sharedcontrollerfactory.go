@@ -4,19 +4,19 @@ import (
 	"context"
 	"sync"
 
-	"github.com/rancher/lasso/pkg/client"
-
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/rest"
-
 	"github.com/rancher/lasso/pkg/cache"
+	"github.com/rancher/lasso/pkg/client"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/workqueue"
 )
 
 type SharedControllerFactory interface {
 	ForObject(obj runtime.Object) (SharedController, error)
 	ForKind(gvk schema.GroupVersionKind) (SharedController, error)
+	ForResource(gvr schema.GroupVersionResource, namespaced bool) SharedController
+	ForResourceKind(gvr schema.GroupVersionResource, kind string, namespaced bool) SharedController
 	SharedCacheFactory() cache.SharedCacheFactory
 	Start(ctx context.Context, workers int) error
 }
@@ -33,10 +33,7 @@ type sharedControllerFactory struct {
 	controllerLock sync.RWMutex
 
 	sharedCacheFactory cache.SharedCacheFactory
-	controllers        map[schema.GroupVersionKind]*sharedController
-
-	started        bool
-	runningContext context.Context
+	controllers        map[schema.GroupVersionResource]*sharedController
 
 	rateLimiter     workqueue.RateLimiter
 	workers         int
@@ -58,7 +55,7 @@ func NewSharedControllerFactory(cacheFactory cache.SharedCacheFactory, opts *Sha
 	opts = applyDefaultSharedOptions(opts)
 	return &sharedControllerFactory{
 		sharedCacheFactory: cacheFactory,
-		controllers:        map[schema.GroupVersionKind]*sharedController{},
+		controllers:        map[schema.GroupVersionResource]*sharedController{},
 		workers:            opts.DefaultWorkers,
 		kindWorkers:        opts.KindWorkers,
 		rateLimiter:        opts.DefaultRateLimiter,
@@ -81,31 +78,25 @@ func (s *sharedControllerFactory) Start(ctx context.Context, defaultWorkers int)
 	s.controllerLock.Lock()
 	defer s.controllerLock.Unlock()
 
-	s.sharedCacheFactory.Start(ctx)
-	for gvk, controller := range s.controllers {
-		if err := controller.Start(ctx, s.getWorkers(gvk, defaultWorkers)); err != nil {
+	if err := s.sharedCacheFactory.Start(ctx); err != nil {
+		return err
+	}
+
+	for gvr, controller := range s.controllers {
+		w, err := s.getWorkers(gvr, defaultWorkers)
+		if err != nil {
+			return err
+		}
+		if err := controller.Start(ctx, w); err != nil {
 			return err
 		}
 	}
-
-	s.started = true
-	s.runningContext = ctx
-
-	go func() {
-		<-ctx.Done()
-
-		s.controllerLock.Lock()
-		defer s.controllerLock.Unlock()
-
-		s.started = false
-		s.runningContext = nil
-	}()
 
 	return nil
 }
 
 func (s *sharedControllerFactory) ForObject(obj runtime.Object) (SharedController, error) {
-	gvk, err := s.sharedCacheFactory.SharedClientFactory().GVK(obj)
+	gvk, err := s.sharedCacheFactory.SharedClientFactory().GVKForObject(obj)
 	if err != nil {
 		return nil, err
 	}
@@ -113,72 +104,100 @@ func (s *sharedControllerFactory) ForObject(obj runtime.Object) (SharedControlle
 }
 
 func (s *sharedControllerFactory) ForKind(gvk schema.GroupVersionKind) (SharedController, error) {
-	controllerResult := s.getKind(gvk)
+	gvr, nsed, err := s.sharedCacheFactory.SharedClientFactory().ResourceForGVK(gvk)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.ForResourceKind(gvr, gvk.Kind, nsed), nil
+}
+
+func (s *sharedControllerFactory) ForResource(gvr schema.GroupVersionResource, namespaced bool) SharedController {
+	return s.ForResourceKind(gvr, "", namespaced)
+}
+
+func (s *sharedControllerFactory) ForResourceKind(gvr schema.GroupVersionResource, kind string, namespaced bool) SharedController {
+	controllerResult := s.byResource(gvr)
 	if controllerResult != nil {
-		return controllerResult, nil
+		return controllerResult
 	}
 
 	s.controllerLock.Lock()
 	defer s.controllerLock.Unlock()
 
-	controllerResult = s.controllers[gvk]
+	controllerResult = s.controllers[gvr]
 	if controllerResult != nil {
-		return controllerResult, nil
+		return controllerResult
 	}
 
-	client, err := s.sharedCacheFactory.SharedClientFactory().ForKind(gvk)
-	if err != nil {
-		return nil, err
-	}
-
-	rateLimiter, ok := s.kindRateLimiter[gvk]
-	if !ok {
-		rateLimiter = s.rateLimiter
-	}
+	client := s.sharedCacheFactory.SharedClientFactory().ForResourceKind(gvr, kind, namespaced)
 
 	handler := &sharedHandler{}
 
 	controllerResult = &sharedController{
 		deferredController: func() (Controller, error) {
-			cache, err := s.sharedCacheFactory.ForKind(gvk)
+			var (
+				gvk schema.GroupVersionKind
+				err error
+			)
+
+			if kind == "" {
+				gvk, err = s.sharedCacheFactory.SharedClientFactory().GVKForResource(gvr)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				gvk = gvr.GroupVersion().WithKind(kind)
+			}
+
+			cache, err := s.sharedCacheFactory.ForResourceKind(gvr, kind, namespaced)
 			if err != nil {
 				return nil, err
 			}
 
-			c := New(gvk.String(), cache, handler, &Options{
+			rateLimiter, ok := s.kindRateLimiter[gvk]
+			if !ok {
+				rateLimiter = s.rateLimiter
+			}
+
+			starter := func(ctx context.Context) error {
+				return s.sharedCacheFactory.StartGVK(ctx, gvk)
+			}
+
+			c := New(gvk.String(), cache, starter, handler, &Options{
 				RateLimiter: rateLimiter,
 			})
-			return c, nil
+
+			return c, err
 		},
 		handler: handler,
 		client:  client,
 	}
 
-	if s.started {
-		if err := controllerResult.Start(s.runningContext, s.getWorkers(gvk, 0)); err != nil {
-			return nil, err
-		}
-	}
-
-	s.controllers[gvk] = controllerResult
-	return controllerResult, nil
+	s.controllers[gvr] = controllerResult
+	return controllerResult
 }
 
-func (s *sharedControllerFactory) getWorkers(gvk schema.GroupVersionKind, workers int) int {
+func (s *sharedControllerFactory) getWorkers(gvr schema.GroupVersionResource, workers int) (int, error) {
+	gvk, err := s.sharedCacheFactory.SharedClientFactory().GVKForResource(gvr)
+	if err != nil {
+		return 0, err
+	}
+
 	w, ok := s.kindWorkers[gvk]
 	if ok {
-		return w
+		return w, nil
 	}
 	if workers > 0 {
-		return workers
+		return workers, nil
 	}
-	return s.workers
+	return s.workers, nil
 }
 
-func (s *sharedControllerFactory) getKind(gvk schema.GroupVersionKind) *sharedController {
+func (s *sharedControllerFactory) byResource(gvr schema.GroupVersionResource) *sharedController {
 	s.controllerLock.RLock()
 	defer s.controllerLock.RUnlock()
-	return s.controllers[gvk]
+	return s.controllers[gvr]
 }
 
 func (s *sharedControllerFactory) SharedCacheFactory() cache.SharedCacheFactory {

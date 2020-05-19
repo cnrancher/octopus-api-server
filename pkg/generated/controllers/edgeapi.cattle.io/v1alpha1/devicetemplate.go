@@ -83,9 +83,8 @@ type deviceTemplateController struct {
 	groupResource schema.GroupResource
 }
 
-func NewDeviceTemplateController(gvk schema.GroupVersionKind, resource string, controller controller.SharedControllerFactory) DeviceTemplateController {
-	c, err := controller.ForKind(gvk)
-	utilruntime.Must(err)
+func NewDeviceTemplateController(gvk schema.GroupVersionKind, resource string, namespaced bool, controller controller.SharedControllerFactory) DeviceTemplateController {
+	c := controller.ForResourceKind(gvk.GroupVersion().WithResource(resource), gvk.Kind, namespaced)
 	return &deviceTemplateController{
 		controller: c,
 		client:     c.Client(),
