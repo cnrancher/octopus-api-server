@@ -5,14 +5,11 @@ import (
 	"sync"
 	"time"
 
-	cachetools "k8s.io/client-go/tools/cache"
-
 	"github.com/rancher/lasso/pkg/cache"
-
-	"k8s.io/apimachinery/pkg/runtime/schema"
-
 	"github.com/rancher/lasso/pkg/client"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	cachetools "k8s.io/client-go/tools/cache"
 )
 
 type SharedControllerHandler interface {
@@ -108,13 +105,15 @@ func (s *sharedController) Start(ctx context.Context, workers int) error {
 }
 
 func (s *sharedController) RegisterHandler(ctx context.Context, name string, handler SharedControllerHandler) {
+	// Ensure that controller is initialized
+	c := s.initController()
+
 	getHandlerTransaction(ctx).do(func() {
+		s.handler.Register(ctx, name, handler)
+
 		s.startLock.Lock()
 		defer s.startLock.Unlock()
-
-		s.handler.Register(ctx, name, handler)
 		if s.started {
-			c := s.initController()
 			for _, key := range c.Informer().GetStore().ListKeys() {
 				c.EnqueueKey(key)
 			}

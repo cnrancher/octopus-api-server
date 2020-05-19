@@ -26,7 +26,7 @@ import (
 )
 
 func init() {
-	v1alpha1.AddToScheme(schemes.All)
+	schemes.Register(v1alpha1.AddToScheme)
 }
 
 type Interface interface {
@@ -46,11 +46,11 @@ type version struct {
 }
 
 func (c *version) Catalog() CatalogController {
-	return NewCatalogController(schema.GroupVersionKind{Group: "edgeapi.cattle.io", Version: "v1alpha1", Kind: "Catalog"}, "catalogs", c.controllerFactory)
+	return NewCatalogController(schema.GroupVersionKind{Group: "edgeapi.cattle.io", Version: "v1alpha1", Kind: "Catalog"}, "catalogs", true, c.controllerFactory)
 }
 func (c *version) DeviceTemplate() DeviceTemplateController {
-	return NewDeviceTemplateController(schema.GroupVersionKind{Group: "edgeapi.cattle.io", Version: "v1alpha1", Kind: "DeviceTemplate"}, "devicetemplates", c.controllerFactory)
+	return NewDeviceTemplateController(schema.GroupVersionKind{Group: "edgeapi.cattle.io", Version: "v1alpha1", Kind: "DeviceTemplate"}, "devicetemplates", true, c.controllerFactory)
 }
 func (c *version) Setting() SettingController {
-	return NewSettingController(schema.GroupVersionKind{Group: "edgeapi.cattle.io", Version: "v1alpha1", Kind: "Setting"}, "settings", c.controllerFactory)
+	return NewSettingController(schema.GroupVersionKind{Group: "edgeapi.cattle.io", Version: "v1alpha1", Kind: "Setting"}, "settings", true, c.controllerFactory)
 }

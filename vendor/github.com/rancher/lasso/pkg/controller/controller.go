@@ -36,7 +36,7 @@ type Controller interface {
 }
 
 type controller struct {
-	enqueueLock sync.Mutex
+	startLock sync.Mutex
 
 	name        string
 	workqueue   workqueue.RateLimitingInterface
@@ -45,6 +45,8 @@ type controller struct {
 	handler     Handler
 	gvk         schema.GroupVersionKind
 	startKeys   []startKey
+	started     bool
+	startCache  func(context.Context) error
 }
 
 type startKey struct {
@@ -56,7 +58,7 @@ type Options struct {
 	RateLimiter workqueue.RateLimiter
 }
 
-func New(name string, informer cache.SharedIndexInformer, handler Handler, opts *Options) Controller {
+func New(name string, informer cache.SharedIndexInformer, startCache func(context.Context) error, handler Handler, opts *Options) Controller {
 	opts = applyDefaultOptions(opts)
 
 	controller := &controller{
@@ -64,6 +66,7 @@ func New(name string, informer cache.SharedIndexInformer, handler Handler, opts 
 		handler:     handler,
 		informer:    informer,
 		rateLimiter: opts.RateLimiter,
+		startCache:  startCache,
 	}
 
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -97,7 +100,7 @@ func (c *controller) GroupVersionKind() schema.GroupVersionKind {
 }
 
 func (c *controller) run(workers int, stopCh <-chan struct{}) {
-	c.enqueueLock.Lock()
+	c.startLock.Lock()
 	// we have to defer queue creation until we have a stopCh available because a workqueue
 	// will create a goroutine under the hood.  It we instantiate a workqueue we must have
 	// a mechanism to Shutdown it down.  Without the stopCh we don't know when to shutdown
@@ -111,7 +114,7 @@ func (c *controller) run(workers int, stopCh <-chan struct{}) {
 		}
 	}
 	c.startKeys = nil
-	c.enqueueLock.Unlock()
+	c.startLock.Unlock()
 
 	defer utilruntime.HandleCrash()
 	defer func() {
@@ -132,11 +135,23 @@ func (c *controller) run(workers int, stopCh <-chan struct{}) {
 }
 
 func (c *controller) Start(ctx context.Context, workers int) error {
+	c.startLock.Lock()
+	defer c.startLock.Unlock()
+
+	if c.started {
+		return nil
+	}
+
+	if err := c.startCache(ctx); err != nil {
+		return err
+	}
+
 	if ok := cache.WaitForCacheSync(ctx.Done(), c.informer.HasSynced); !ok {
 		return fmt.Errorf("failed to wait for caches to sync")
 	}
 
 	go c.run(workers, ctx.Done())
+	c.started = true
 	return nil
 }
 
@@ -154,7 +169,7 @@ func (c *controller) processNextWorkItem() bool {
 
 	if err := c.processSingleItem(obj); err != nil {
 		if !strings.Contains(err.Error(), "please apply your changes to the latest version and try again") {
-			utilruntime.HandleError(err)
+			log.Errorf("%v", err)
 		}
 		return true
 	}
@@ -172,7 +187,7 @@ func (c *controller) processSingleItem(obj interface{}) error {
 
 	if key, ok = obj.(string); !ok {
 		c.workqueue.Forget(obj)
-		utilruntime.HandleError(fmt.Errorf("expected string in workqueue but got %#v", obj))
+		log.Errorf("expected string in workqueue but got %#v", obj)
 		return nil
 	}
 	if err := c.syncHandler(key); err != nil {
@@ -197,21 +212,21 @@ func (c *controller) syncHandler(key string) error {
 }
 
 func (c *controller) EnqueueKey(key string) {
-	c.enqueueLock.Lock()
-	defer c.enqueueLock.Unlock()
+	c.startLock.Lock()
+	defer c.startLock.Unlock()
 
 	if c.workqueue == nil {
-		c.workqueue.AddRateLimited(key)
-	} else {
 		c.startKeys = append(c.startKeys, startKey{key: key})
+	} else {
+		c.workqueue.AddRateLimited(key)
 	}
 }
 
 func (c *controller) Enqueue(namespace, name string) {
 	key := keyFunc(namespace, name)
 
-	c.enqueueLock.Lock()
-	defer c.enqueueLock.Unlock()
+	c.startLock.Lock()
+	defer c.startLock.Unlock()
 
 	if c.workqueue == nil {
 		c.startKeys = append(c.startKeys, startKey{key: key})
@@ -223,8 +238,8 @@ func (c *controller) Enqueue(namespace, name string) {
 func (c *controller) EnqueueAfter(namespace, name string, duration time.Duration) {
 	key := keyFunc(namespace, name)
 
-	c.enqueueLock.Lock()
-	defer c.enqueueLock.Unlock()
+	c.startLock.Lock()
+	defer c.startLock.Unlock()
 
 	if c.workqueue == nil {
 		c.startKeys = append(c.startKeys, startKey{key: key, after: duration})
@@ -244,28 +259,28 @@ func (c *controller) enqueue(obj interface{}) {
 	var key string
 	var err error
 	if key, err = cache.MetaNamespaceKeyFunc(obj); err != nil {
-		utilruntime.HandleError(err)
+		log.Errorf("%v", err)
 		return
 	}
-	c.enqueueLock.Lock()
+	c.startLock.Lock()
 	if c.workqueue == nil {
 		c.startKeys = append(c.startKeys, startKey{key: key})
 	} else {
 		c.workqueue.Add(key)
 	}
-	c.enqueueLock.Unlock()
+	c.startLock.Unlock()
 }
 
 func (c *controller) handleObject(obj interface{}) {
 	if _, ok := obj.(metav1.Object); !ok {
 		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
 		if !ok {
-			utilruntime.HandleError(fmt.Errorf("error decoding object, invalid type"))
+			log.Errorf("error decoding object, invalid type")
 			return
 		}
 		_, ok = tombstone.Obj.(metav1.Object)
 		if !ok {
-			utilruntime.HandleError(fmt.Errorf("error decoding object tombstone, invalid type"))
+			log.Errorf("error decoding object tombstone, invalid type")
 			return
 		}
 	}

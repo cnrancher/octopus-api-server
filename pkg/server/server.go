@@ -71,7 +71,7 @@ func New(ctx context.Context, clientConfig clientcmd.ClientConfig, cfg *Config) 
 		return nil, fmt.Errorf("kubernetes dynamic client create error:%s", err.Error())
 	}
 
-	steveControllers, err := server.NewController(restConfig)
+	steveControllers, err := server.NewController(restConfig, nil)
 	if err != nil {
 		return nil, err
 	}

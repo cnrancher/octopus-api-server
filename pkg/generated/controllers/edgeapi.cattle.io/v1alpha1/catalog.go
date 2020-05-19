@@ -83,9 +83,8 @@ type catalogController struct {
 	groupResource schema.GroupResource
 }
 
-func NewCatalogController(gvk schema.GroupVersionKind, resource string, controller controller.SharedControllerFactory) CatalogController {
-	c, err := controller.ForKind(gvk)
-	utilruntime.Must(err)
+func NewCatalogController(gvk schema.GroupVersionKind, resource string, namespaced bool, controller controller.SharedControllerFactory) CatalogController {
+	c := controller.ForResourceKind(gvk.GroupVersion().WithResource(resource), gvk.Kind, namespaced)
 	return &catalogController{
 		controller: c,
 		client:     c.Client(),
