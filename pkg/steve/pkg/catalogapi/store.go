@@ -38,7 +38,7 @@ func (s *Store) Create(apiOp *types.APIRequest, schema *types.APISchema, data ty
 			return object, err
 		}
 	}
-	return data, nil
+	return s.Store.Create(apiOp, schema, data)
 }
 
 func (s *Store) refreshCatalog(catalog *v1alpha1.Catalog) (err error) {
