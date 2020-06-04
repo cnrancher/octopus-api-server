@@ -1,6 +1,8 @@
 package resources
 
 import (
+	"context"
+
 	"github.com/rancher/steve/pkg/accesscontrol"
 	"github.com/rancher/steve/pkg/client"
 	"github.com/rancher/steve/pkg/clustercache"
@@ -9,6 +11,7 @@ import (
 	"github.com/rancher/steve/pkg/schemaserver/subscribe"
 	"github.com/rancher/steve/pkg/schemaserver/types"
 	"github.com/rancher/steve/pkg/server/resources/apigroups"
+	"github.com/rancher/steve/pkg/server/resources/clusters"
 	"github.com/rancher/steve/pkg/server/resources/common"
 	"github.com/rancher/steve/pkg/server/resources/counts"
 	"github.com/rancher/steve/pkg/server/resources/userpreferences"
@@ -16,11 +19,12 @@ import (
 	"k8s.io/client-go/discovery"
 )
 
-func DefaultSchemas(baseSchema *types.APISchemas, ccache clustercache.ClusterCache, cg proxy.ClientGetter) *types.APISchemas {
+func DefaultSchemas(ctx context.Context, baseSchema *types.APISchemas, ccache clustercache.ClusterCache, cg proxy.ClientGetter) *types.APISchemas {
 	counts.Register(baseSchema, ccache)
 	subscribe.Register(baseSchema)
 	apiroot.Register(baseSchema, []string{"v1"}, []string{"proxy:/apis"})
 	userpreferences.Register(baseSchema, cg)
+	clusters.Register(ctx, baseSchema, cg, ccache)
 	return baseSchema
 }
 
