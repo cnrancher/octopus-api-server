@@ -15,6 +15,46 @@ steps:
   - name: docker
     path: /var/run/docker.sock
 
+- name: docker-publish-master
+  image: plugins/docker
+  settings:
+    dockerfile: package/Dockerfile
+    password:
+      from_secret: docker_password
+    repo: cnrancher/edge-api-server
+    tag: "${DRONE_BRANCH}-amd64"
+    username:
+      from_secret: docker_username
+  when:
+    ref:
+      include:
+      - "refs/heads/master"
+      - "refs/heads/release/v*"
+      - "refs/tags/v*"
+    event:
+      include:
+      - push
+
+- name: docker-publish
+  image: plugins/docker
+  settings:
+    dockerfile: package/Dockerfile
+    password:
+      from_secret: docker_password
+    repo: cnrancher/edge-api-server
+    tag: "${DRONE_TAG}-amd64"
+    username:
+      from_secret: docker_username
+  when:
+    ref:
+      include:
+      - "refs/heads/master"
+      - "refs/heads/release/v*"
+      - "refs/tags/v*"
+    event:
+      include:
+      - tag
+
 - name: github_binary_release
   image: plugins/github-release
   settings:
@@ -29,34 +69,26 @@ steps:
     - "dist/artifacts/*"
   when:
     ref:
-    - refs/head/master
-    - refs/tags/*
+      include:
+      - "refs/heads/master"
+      - "refs/heads/release/v*"
+      - "refs/tags/v*"
     event:
-    - tag
+      include:
+      - tag
 
-- name: docker-publish
-  image: plugins/docker
-  settings:
-    dockerfile: package/Dockerfile
-    password:
-      from_secret: docker_password
-    repo:
-      from_secret: image_repo
-    tag: "${DRONE_TAG}-amd64"
-    username:
-      from_secret: docker_username
-  when:
-    ref:
-    - refs/head/master
-    - refs/tags/*
-    event:
-    - tag
 node:
   instance: agent-amd64
 volumes:
-- name: docker
-  host:
-    path: /var/run/docker.sock
+  - name: docker
+    host:
+      path: /var/run/docker.sock
+trigger:
+  event:
+    include:
+    - push
+    - pull_request
+    - tag
 
 ---
 kind: pipeline
@@ -75,6 +107,46 @@ steps:
   - name: docker
     path: /var/run/docker.sock
 
+- name: docker-publish-master
+  image: plugins/docker
+  settings:
+    dockerfile: package/Dockerfile
+    password:
+      from_secret: docker_password
+    repo: cnrancher/edge-api-server
+    tag: "${DRONE_BRANCH}-arm64"
+    username:
+      from_secret: docker_username
+  when:
+    ref:
+      include:
+      - "refs/heads/master"
+      - "refs/heads/release/v*"
+      - "refs/tags/v*"
+    event:
+      include:
+      - push
+
+- name: docker-publish
+  image: plugins/docker
+  settings:
+    dockerfile: package/Dockerfile
+    password:
+      from_secret: docker_password
+    repo: cnrancher/edge-api-server
+    tag: "${DRONE_TAG}-arm64"
+    username:
+      from_secret: docker_username
+  when:
+    ref:
+      include:
+      - "refs/heads/master"
+      - "refs/heads/release/v*"
+      - "refs/tags/v*"
+    event:
+      include:
+      - tag
+
 - name: github_binary_release
   image: plugins/github-release
   settings:
@@ -89,34 +161,26 @@ steps:
     - "dist/artifacts/*"
   when:
     ref:
-    - refs/head/master
-    - refs/tags/*
+      include:
+      - "refs/heads/master"
+      - "refs/heads/release/v*"
+      - "refs/tags/v*"
     event:
-    - tag
+      include:
+      - tag
 
-- name: docker-publish
-  image: plugins/docker
-  settings:
-    dockerfile: package/Dockerfile
-    password:
-      from_secret: docker_password
-    repo:
-      from_secret: image_repo
-    tag: "${DRONE_TAG}-arm64"
-    username:
-      from_secret: docker_username
-  when:
-    ref:
-    - refs/head/master
-    - refs/tags/*
-    event:
-    - tag
 node:
   instance: agent-arm64
 volumes:
 - name: docker
   host:
     path: /var/run/docker.sock
+trigger:
+  event:
+    include:
+    - push
+    - pull_request
+    - tag
 
 ---
 kind: pipeline
@@ -135,6 +199,46 @@ steps:
   - name: docker
     path: /var/run/docker.sock
 
+- name: docker-publish-master
+  image: plugins/docker
+  settings:
+    dockerfile: package/Dockerfile
+    password:
+      from_secret: docker_password
+    repo: cnrancher/edge-api-server
+    tag: "${DRONE_BRANCH}-arm"
+    username:
+      from_secret: docker_username
+  when:
+    ref:
+      include:
+      - "refs/heads/master"
+      - "refs/heads/release/v*"
+      - "refs/tags/v*"
+    event:
+      include:
+      - push
+
+- name: docker-publish
+  image: plugins/docker
+  settings:
+    dockerfile: package/Dockerfile
+    password:
+      from_secret: docker_password
+    repo: cnrancher/edge-api-server
+    tag: "${DRONE_TAG}-arm"
+    username:
+      from_secret: docker_username
+  when:
+    ref:
+      include:
+      - "refs/heads/master"
+      - "refs/heads/release/v*"
+      - "refs/tags/v*"
+    event:
+      include:
+      - tag
+
 - name: github_binary_release
   image: plugins/github-release
   settings:
@@ -149,34 +253,26 @@ steps:
     - "dist/artifacts/*"
   when:
     ref:
-    - refs/head/master
-    - refs/tags/*
+      include:
+      - "refs/heads/master"
+      - "refs/heads/release/v*"
+      - "refs/tags/v*"
     event:
-    - tag
+      include:
+      - tag
 
-- name: docker-publish
-  image: plugins/docker
-  settings:
-    dockerfile: package/Dockerfile
-    password:
-      from_secret: docker_password
-    repo:
-      from_secret: image_repo
-    tag: "${DRONE_TAG}-arm"
-    username:
-      from_secret: docker_username
-  when:
-    ref:
-    - refs/head/master
-    - refs/tags/*
-    event:
-    - tag
 node:
   instance: agent-arm
 volumes:
 - name: docker
   host:
     path: /var/run/docker.sock
+trigger:
+  event:
+    include:
+    - push
+    - pull_request
+    - tag
 
 ---
 kind: pipeline
@@ -187,6 +283,29 @@ platform:
   arch: amd64
 
 steps:
+- name: manifest-master
+  image: plugins/manifest:1.0.2
+  settings:
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+    platforms:
+    - linux/amd64
+    - linux/arm64
+    - linux/arm
+    target: "cnrancher/edge-api-server:${DRONE_BRANCH}"
+    template: "cnrancher/edge-api-server:${DRONE_BRANCH}-ARCH"
+  when:
+    ref:
+      include:
+      - "refs/heads/master"
+      - "refs/heads/release/v*"
+      - "refs/tags/v*"
+    event:
+      include:
+      - push
+
 - name: manifest
   image: plugins/manifest:1.0.2
   settings:
@@ -202,12 +321,22 @@ steps:
     template: "cnrancher/edge-api-server:${DRONE_TAG}-ARCH"
   when:
     ref:
-    - refs/head/master
-    - refs/tags/*
+      include:
+      - "refs/heads/master"
+      - "refs/heads/release/v*"
+      - "refs/tags/v*"
     event:
-    - tag
+      include:
+      - tag
+
 node:
   instance: agent-amd64
+trigger:
+  event:
+    include:
+    - push
+    - pull_request
+    - tag
 depends_on:
 - amd64
 - arm64
