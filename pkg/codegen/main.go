@@ -20,6 +20,7 @@ func main() {
 					v1alpha1.Catalog{},
 					v1alpha1.DeviceTemplate{},
 					v1alpha1.Setting{},
+					v1alpha1.DeviceTemplateRevision{},
 				},
 				GenerateTypes: true,
 			},

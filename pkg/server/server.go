@@ -11,6 +11,7 @@ import (
 	"github.com/cnrancher/edge-api-server/pkg/settings"
 	"github.com/cnrancher/edge-api-server/pkg/steve/pkg/catalogapi"
 	"github.com/cnrancher/edge-api-server/pkg/steve/pkg/devicetemplateapi"
+	"github.com/cnrancher/edge-api-server/pkg/steve/pkg/devicetemplaterevisionapi"
 	"github.com/rancher/steve/pkg/accesscontrol"
 	"github.com/rancher/steve/pkg/server"
 	steveserver "github.com/rancher/steve/pkg/server"
@@ -101,6 +102,7 @@ func newSteveServer(ctx context.Context, edgeServer *EdgeServer) (*steveserver.S
 
 	catalogAPIServer := &catalogapi.Server{}
 	deviceTemplateAPIServer := &devicetemplateapi.Server{Authenticator: a}
+	deviceTemplateRevisionAPIServer := &devicetemplaterevisionapi.Server{Authenticator: a}
 
 	return &steveserver.Server{
 		Controllers:     edgeServer.Controllers,
@@ -117,6 +119,7 @@ func newSteveServer(ctx context.Context, edgeServer *EdgeServer) (*steveserver.S
 		StartHooks: []steveserver.StartHook{
 			catalogAPIServer.Setup,
 			deviceTemplateAPIServer.Setup,
+			deviceTemplateRevisionAPIServer.Setup,
 		},
 	}, nil
 }

@@ -10,19 +10,6 @@ spec:
   deviceResource: modbusdevices
   labels:
     foo: bar
-  templateSpec:
-    protocol:
-      tcp:
-        ip: 127.0.0.1
-        port: 502
-        slaveID: 1
-    properties:
-      - name: temperature
-        description: enable data collection of temperature sensor
-        readOnly: false
-        visitor:
-          register: HoldingRegister
-          offset: 2
-          quantity: 8
-        value: "33.3"
-        dataType: float
+  displayName: my-modbus-template
+  description: template example
+  defaultRevisionName: ''

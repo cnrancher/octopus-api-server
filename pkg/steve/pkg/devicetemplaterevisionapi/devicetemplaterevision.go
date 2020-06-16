@@ -1,18 +1,19 @@
-package devicetemplateapi
+package devicetemplaterevisionapi
 
 import (
 	"context"
+
+	"github.com/rancher/steve/pkg/schema"
+	"github.com/rancher/steve/pkg/server/store/proxy"
+	"github.com/sirupsen/logrus"
 
 	apiAuth "github.com/cnrancher/edge-api-server/pkg/auth"
 	v1 "github.com/cnrancher/edge-api-server/pkg/generated/controllers/edgeapi.cattle.io"
 	"github.com/rancher/steve/pkg/accesscontrol"
 	"github.com/rancher/steve/pkg/auth"
 	"github.com/rancher/steve/pkg/client"
-	"github.com/rancher/steve/pkg/schema"
 	"github.com/rancher/steve/pkg/schemaserver/types"
 	steveserver "github.com/rancher/steve/pkg/server"
-	"github.com/rancher/steve/pkg/server/store/proxy"
-	"github.com/sirupsen/logrus"
 )
 
 type Server struct {
@@ -37,16 +38,16 @@ func (s *Server) Setup(ctx context.Context, server *steveserver.Server) error {
 		logrus.Fatalf("Error building controllers: %s", err.Error())
 	}
 	store = &Store{
-		Store:              store,
-		asl:                s.asl,
-		ctx:                s.ctx,
-		auth:               s.Authenticator,
-		revisionController: controllers.Edgeapi().V1alpha1().DeviceTemplateRevision(),
+		Store:                    store,
+		asl:                      s.asl,
+		ctx:                      s.ctx,
+		client:                   server.ClientFactory.DynamicClient(),
+		auth:                     s.Authenticator,
+		deviceTemplateController: controllers.Edgeapi().V1alpha1().DeviceTemplate(),
 	}
 	server.SchemaTemplates = append(server.SchemaTemplates, schema.Template{
 		Store: store,
-		ID:    "edgeapi.cattle.io.devicetemplate",
+		ID:    "edgeapi.cattle.io.devicetemplaterevision",
 	})
-
 	return nil
 }

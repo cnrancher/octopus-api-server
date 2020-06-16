@@ -15,18 +15,16 @@ const (
 )
 
 type Controller struct {
-	context      context.Context
-	dtController controllers.DeviceTemplateController
-	dtCache      controllers.DeviceTemplateCache
-	apply        apply.Apply
+	context            context.Context
+	templateController controllers.DeviceTemplateController
+	apply              apply.Apply
 }
 
 func Register(ctx context.Context, apply apply.Apply, devicetempaltes controllers.DeviceTemplateController) {
 	ctrl := &Controller{
-		context:      ctx,
-		dtController: devicetempaltes,
-		dtCache:      devicetempaltes.Cache(),
-		apply:        apply,
+		context:            ctx,
+		templateController: devicetempaltes,
+		apply:              apply,
 	}
 	devicetempaltes.OnChange(ctx, name, ctrl.OnChanged)
 	devicetempaltes.OnRemove(ctx, name, ctrl.OnRemoved)
@@ -40,15 +38,14 @@ func (c *Controller) OnChanged(key string, obj *v1alpha1.DeviceTemplate) (*v1alp
 	if obj == nil || obj.DeletionTimestamp != nil {
 		return nil, nil
 	}
-
 	objCopy := obj.DeepCopy()
 	objCopy.Status.UpdatedAt = metav1.Time{Time: time.Now()}
-	return c.dtController.Update(objCopy)
+	return c.templateController.Update(objCopy)
 }
 
 func (c *Controller) OnRemoved(key string, obj *v1alpha1.DeviceTemplate) (*v1alpha1.DeviceTemplate, error) {
 	if key == "" {
 		return obj, nil
 	}
-	return obj, c.dtController.Delete(obj.Namespace, obj.Name, &metav1.DeleteOptions{})
+	return obj, c.templateController.Delete(obj.Namespace, obj.Name, &metav1.DeleteOptions{})
 }

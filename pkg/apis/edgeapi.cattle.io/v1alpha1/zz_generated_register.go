@@ -28,9 +28,10 @@ import (
 )
 
 var (
-	CatalogResourceName        = "catalogs"
-	DeviceTemplateResourceName = "devicetemplates"
-	SettingResourceName        = "settings"
+	CatalogResourceName                = "catalogs"
+	DeviceTemplateResourceName         = "devicetemplates"
+	DeviceTemplateRevisionResourceName = "devicetemplaterevisions"
+	SettingResourceName                = "settings"
 )
 
 // SchemeGroupVersion is group version used to register these objects
@@ -58,6 +59,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&CatalogList{},
 		&DeviceTemplate{},
 		&DeviceTemplateList{},
+		&DeviceTemplateRevision{},
+		&DeviceTemplateRevisionList{},
 		&Setting{},
 		&SettingList{},
 	)
