@@ -2,7 +2,6 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // +genclient
@@ -17,12 +16,12 @@ type DeviceTemplate struct {
 }
 
 type DeviceTemplateSpec struct {
-	DeviceKind     string                `json:"deviceKind,omitempty"`
-	DeviceVersion  string                `json:"deviceVersion,omitempty"`
-	DeviceGroup    string                `json:"deviceGroup,omitempty"`
-	DeviceResource string                `json:"deviceResource,omitempty"`
-	Labels         map[string]string     `json:"labels,omitempty"`
-	TemplateSpec   *runtime.RawExtension `json:"templateSpec,omitempty"`
+	DeviceKind          string `json:"deviceKind,omitempty"`
+	DeviceVersion       string `json:"deviceVersion,omitempty"`
+	DeviceGroup         string `json:"deviceGroup,omitempty"`
+	DeviceResource      string `json:"deviceResource,omitempty"`
+	Description         string `json:"description"`
+	DefaultRevisionName string `json:"defaultRevisionName"`
 }
 
 type DeviceTemplateStatus struct {

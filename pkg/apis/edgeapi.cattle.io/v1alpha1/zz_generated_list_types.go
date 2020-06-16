@@ -74,3 +74,20 @@ func NewSetting(namespace, name string, obj Setting) *Setting {
 	obj.Namespace = namespace
 	return &obj
 }
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// DeviceTemplateRevisionList is a list of DeviceTemplateRevision resources
+type DeviceTemplateRevisionList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+
+	Items []DeviceTemplateRevision `json:"items"`
+}
+
+func NewDeviceTemplateRevision(namespace, name string, obj DeviceTemplateRevision) *DeviceTemplateRevision {
+	obj.APIVersion, obj.Kind = SchemeGroupVersion.WithKind("DeviceTemplateRevision").ToAPIVersionAndKind()
+	obj.Name = name
+	obj.Namespace = namespace
+	return &obj
+}
