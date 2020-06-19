@@ -23,8 +23,9 @@ import (
 	"time"
 
 	v1alpha1 "github.com/cnrancher/edge-api-server/pkg/apis/edgeapi.cattle.io/v1alpha1"
-	"github.com/rancher/lasso/pkg/client"
-	"github.com/rancher/lasso/pkg/controller"
+	clientset "github.com/cnrancher/edge-api-server/pkg/generated/clientset/versioned/typed/edgeapi.cattle.io/v1alpha1"
+	informers "github.com/cnrancher/edge-api-server/pkg/generated/informers/externalversions/edgeapi.cattle.io/v1alpha1"
+	listers "github.com/cnrancher/edge-api-server/pkg/generated/listers/edgeapi.cattle.io/v1alpha1"
 	"github.com/rancher/wrangler/pkg/apply"
 	"github.com/rancher/wrangler/pkg/condition"
 	"github.com/rancher/wrangler/pkg/generic"
@@ -77,22 +78,18 @@ type DeviceTemplateCache interface {
 type DeviceTemplateIndexer func(obj *v1alpha1.DeviceTemplate) ([]string, error)
 
 type deviceTemplateController struct {
-	controller    controller.SharedController
-	client        *client.Client
-	gvk           schema.GroupVersionKind
-	groupResource schema.GroupResource
+	controllerManager *generic.ControllerManager
+	clientGetter      clientset.DeviceTemplatesGetter
+	informer          informers.DeviceTemplateInformer
+	gvk               schema.GroupVersionKind
 }
 
-func NewDeviceTemplateController(gvk schema.GroupVersionKind, resource string, namespaced bool, controller controller.SharedControllerFactory) DeviceTemplateController {
-	c := controller.ForResourceKind(gvk.GroupVersion().WithResource(resource), gvk.Kind, namespaced)
+func NewDeviceTemplateController(gvk schema.GroupVersionKind, controllerManager *generic.ControllerManager, clientGetter clientset.DeviceTemplatesGetter, informer informers.DeviceTemplateInformer) DeviceTemplateController {
 	return &deviceTemplateController{
-		controller: c,
-		client:     c.Client(),
-		gvk:        gvk,
-		groupResource: schema.GroupResource{
-			Group:    gvk.Group,
-			Resource: resource,
-		},
+		controllerManager: controllerManager,
+		clientGetter:      clientGetter,
+		informer:          informer,
+		gvk:               gvk,
 	}
 }
 
@@ -139,11 +136,12 @@ func UpdateDeviceTemplateDeepCopyOnChange(client DeviceTemplateClient, obj *v1al
 }
 
 func (c *deviceTemplateController) AddGenericHandler(ctx context.Context, name string, handler generic.Handler) {
-	c.controller.RegisterHandler(ctx, name, controller.SharedControllerHandlerFunc(handler))
+	c.controllerManager.AddHandler(ctx, c.gvk, c.informer.Informer(), name, handler)
 }
 
 func (c *deviceTemplateController) AddGenericRemoveHandler(ctx context.Context, name string, handler generic.Handler) {
-	c.AddGenericHandler(ctx, name, generic.NewRemoveHandler(name, c.Updater(), handler))
+	removeHandler := generic.NewRemoveHandler(name, c.Updater(), handler)
+	c.controllerManager.AddHandler(ctx, c.gvk, c.informer.Informer(), name, removeHandler)
 }
 
 func (c *deviceTemplateController) OnChange(ctx context.Context, name string, sync DeviceTemplateHandler) {
@@ -151,19 +149,20 @@ func (c *deviceTemplateController) OnChange(ctx context.Context, name string, sy
 }
 
 func (c *deviceTemplateController) OnRemove(ctx context.Context, name string, sync DeviceTemplateHandler) {
-	c.AddGenericHandler(ctx, name, generic.NewRemoveHandler(name, c.Updater(), FromDeviceTemplateHandlerToHandler(sync)))
+	removeHandler := generic.NewRemoveHandler(name, c.Updater(), FromDeviceTemplateHandlerToHandler(sync))
+	c.AddGenericHandler(ctx, name, removeHandler)
 }
 
 func (c *deviceTemplateController) Enqueue(namespace, name string) {
-	c.controller.Enqueue(namespace, name)
+	c.controllerManager.Enqueue(c.gvk, c.informer.Informer(), namespace, name)
 }
 
 func (c *deviceTemplateController) EnqueueAfter(namespace, name string, duration time.Duration) {
-	c.controller.EnqueueAfter(namespace, name, duration)
+	c.controllerManager.EnqueueAfter(c.gvk, c.informer.Informer(), namespace, name, duration)
 }
 
 func (c *deviceTemplateController) Informer() cache.SharedIndexInformer {
-	return c.controller.Informer()
+	return c.informer.Informer()
 }
 
 func (c *deviceTemplateController) GroupVersionKind() schema.GroupVersionKind {
@@ -172,75 +171,57 @@ func (c *deviceTemplateController) GroupVersionKind() schema.GroupVersionKind {
 
 func (c *deviceTemplateController) Cache() DeviceTemplateCache {
 	return &deviceTemplateCache{
-		indexer:  c.Informer().GetIndexer(),
-		resource: c.groupResource,
+		lister:  c.informer.Lister(),
+		indexer: c.informer.Informer().GetIndexer(),
 	}
 }
 
 func (c *deviceTemplateController) Create(obj *v1alpha1.DeviceTemplate) (*v1alpha1.DeviceTemplate, error) {
-	result := &v1alpha1.DeviceTemplate{}
-	return result, c.client.Create(context.TODO(), obj.Namespace, obj, result, metav1.CreateOptions{})
+	return c.clientGetter.DeviceTemplates(obj.Namespace).Create(context.TODO(), obj, metav1.CreateOptions{})
 }
 
 func (c *deviceTemplateController) Update(obj *v1alpha1.DeviceTemplate) (*v1alpha1.DeviceTemplate, error) {
-	result := &v1alpha1.DeviceTemplate{}
-	return result, c.client.Update(context.TODO(), obj.Namespace, obj, result, metav1.UpdateOptions{})
+	return c.clientGetter.DeviceTemplates(obj.Namespace).Update(context.TODO(), obj, metav1.UpdateOptions{})
 }
 
 func (c *deviceTemplateController) UpdateStatus(obj *v1alpha1.DeviceTemplate) (*v1alpha1.DeviceTemplate, error) {
-	result := &v1alpha1.DeviceTemplate{}
-	return result, c.client.UpdateStatus(context.TODO(), obj.Namespace, obj, result, metav1.UpdateOptions{})
+	return c.clientGetter.DeviceTemplates(obj.Namespace).UpdateStatus(context.TODO(), obj, metav1.UpdateOptions{})
 }
 
 func (c *deviceTemplateController) Delete(namespace, name string, options *metav1.DeleteOptions) error {
 	if options == nil {
 		options = &metav1.DeleteOptions{}
 	}
-	return c.client.Delete(context.TODO(), namespace, name, *options)
+	return c.clientGetter.DeviceTemplates(namespace).Delete(context.TODO(), name, *options)
 }
 
 func (c *deviceTemplateController) Get(namespace, name string, options metav1.GetOptions) (*v1alpha1.DeviceTemplate, error) {
-	result := &v1alpha1.DeviceTemplate{}
-	return result, c.client.Get(context.TODO(), namespace, name, result, options)
+	return c.clientGetter.DeviceTemplates(namespace).Get(context.TODO(), name, options)
 }
 
 func (c *deviceTemplateController) List(namespace string, opts metav1.ListOptions) (*v1alpha1.DeviceTemplateList, error) {
-	result := &v1alpha1.DeviceTemplateList{}
-	return result, c.client.List(context.TODO(), namespace, result, opts)
+	return c.clientGetter.DeviceTemplates(namespace).List(context.TODO(), opts)
 }
 
 func (c *deviceTemplateController) Watch(namespace string, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.client.Watch(context.TODO(), namespace, opts)
+	return c.clientGetter.DeviceTemplates(namespace).Watch(context.TODO(), opts)
 }
 
-func (c *deviceTemplateController) Patch(namespace, name string, pt types.PatchType, data []byte, subresources ...string) (*v1alpha1.DeviceTemplate, error) {
-	result := &v1alpha1.DeviceTemplate{}
-	return result, c.client.Patch(context.TODO(), namespace, name, pt, data, result, metav1.PatchOptions{}, subresources...)
+func (c *deviceTemplateController) Patch(namespace, name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.DeviceTemplate, err error) {
+	return c.clientGetter.DeviceTemplates(namespace).Patch(context.TODO(), name, pt, data, metav1.PatchOptions{}, subresources...)
 }
 
 type deviceTemplateCache struct {
-	indexer  cache.Indexer
-	resource schema.GroupResource
+	lister  listers.DeviceTemplateLister
+	indexer cache.Indexer
 }
 
 func (c *deviceTemplateCache) Get(namespace, name string) (*v1alpha1.DeviceTemplate, error) {
-	obj, exists, err := c.indexer.GetByKey(namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(c.resource, name)
-	}
-	return obj.(*v1alpha1.DeviceTemplate), nil
+	return c.lister.DeviceTemplates(namespace).Get(name)
 }
 
-func (c *deviceTemplateCache) List(namespace string, selector labels.Selector) (ret []*v1alpha1.DeviceTemplate, err error) {
-
-	err = cache.ListAllByNamespace(c.indexer, namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.DeviceTemplate))
-	})
-
-	return ret, err
+func (c *deviceTemplateCache) List(namespace string, selector labels.Selector) ([]*v1alpha1.DeviceTemplate, error) {
+	return c.lister.DeviceTemplates(namespace).List(selector)
 }
 
 func (c *deviceTemplateCache) AddIndexer(indexName string, indexer DeviceTemplateIndexer) {

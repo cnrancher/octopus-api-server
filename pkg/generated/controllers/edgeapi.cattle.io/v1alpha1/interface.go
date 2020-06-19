@@ -20,14 +20,10 @@ package v1alpha1
 
 import (
 	v1alpha1 "github.com/cnrancher/edge-api-server/pkg/apis/edgeapi.cattle.io/v1alpha1"
-	"github.com/rancher/lasso/pkg/controller"
-	"github.com/rancher/wrangler/pkg/schemes"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	clientset "github.com/cnrancher/edge-api-server/pkg/generated/clientset/versioned/typed/edgeapi.cattle.io/v1alpha1"
+	informers "github.com/cnrancher/edge-api-server/pkg/generated/informers/externalversions/edgeapi.cattle.io/v1alpha1"
+	"github.com/rancher/wrangler/pkg/generic"
 )
-
-func init() {
-	schemes.Register(v1alpha1.AddToScheme)
-}
 
 type Interface interface {
 	Catalog() CatalogController
@@ -36,25 +32,30 @@ type Interface interface {
 	Setting() SettingController
 }
 
-func New(controllerFactory controller.SharedControllerFactory) Interface {
+func New(controllerManager *generic.ControllerManager, client clientset.EdgeapiV1alpha1Interface,
+	informers informers.Interface) Interface {
 	return &version{
-		controllerFactory: controllerFactory,
+		controllerManager: controllerManager,
+		client:            client,
+		informers:         informers,
 	}
 }
 
 type version struct {
-	controllerFactory controller.SharedControllerFactory
+	controllerManager *generic.ControllerManager
+	informers         informers.Interface
+	client            clientset.EdgeapiV1alpha1Interface
 }
 
 func (c *version) Catalog() CatalogController {
-	return NewCatalogController(schema.GroupVersionKind{Group: "edgeapi.cattle.io", Version: "v1alpha1", Kind: "Catalog"}, "catalogs", true, c.controllerFactory)
+	return NewCatalogController(v1alpha1.SchemeGroupVersion.WithKind("Catalog"), c.controllerManager, c.client, c.informers.Catalogs())
 }
 func (c *version) DeviceTemplate() DeviceTemplateController {
-	return NewDeviceTemplateController(schema.GroupVersionKind{Group: "edgeapi.cattle.io", Version: "v1alpha1", Kind: "DeviceTemplate"}, "devicetemplates", true, c.controllerFactory)
+	return NewDeviceTemplateController(v1alpha1.SchemeGroupVersion.WithKind("DeviceTemplate"), c.controllerManager, c.client, c.informers.DeviceTemplates())
 }
 func (c *version) DeviceTemplateRevision() DeviceTemplateRevisionController {
-	return NewDeviceTemplateRevisionController(schema.GroupVersionKind{Group: "edgeapi.cattle.io", Version: "v1alpha1", Kind: "DeviceTemplateRevision"}, "devicetemplaterevisions", true, c.controllerFactory)
+	return NewDeviceTemplateRevisionController(v1alpha1.SchemeGroupVersion.WithKind("DeviceTemplateRevision"), c.controllerManager, c.client, c.informers.DeviceTemplateRevisions())
 }
 func (c *version) Setting() SettingController {
-	return NewSettingController(schema.GroupVersionKind{Group: "edgeapi.cattle.io", Version: "v1alpha1", Kind: "Setting"}, "settings", true, c.controllerFactory)
+	return NewSettingController(v1alpha1.SchemeGroupVersion.WithKind("Setting"), c.controllerManager, c.client, c.informers.Settings())
 }

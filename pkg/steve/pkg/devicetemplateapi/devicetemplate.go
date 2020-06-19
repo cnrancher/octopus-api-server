@@ -5,13 +5,13 @@ import (
 
 	apiAuth "github.com/cnrancher/edge-api-server/pkg/auth"
 	v1 "github.com/cnrancher/edge-api-server/pkg/generated/controllers/edgeapi.cattle.io"
+	"github.com/rancher/apiserver/pkg/types"
 	"github.com/rancher/steve/pkg/accesscontrol"
 	"github.com/rancher/steve/pkg/auth"
 	"github.com/rancher/steve/pkg/client"
 	"github.com/rancher/steve/pkg/schema"
-	"github.com/rancher/steve/pkg/schemaserver/types"
 	steveserver "github.com/rancher/steve/pkg/server"
-	"github.com/rancher/steve/pkg/server/store/proxy"
+	"github.com/rancher/steve/pkg/stores/proxy"
 	"github.com/sirupsen/logrus"
 )
 

@@ -23,8 +23,9 @@ import (
 	"time"
 
 	v1alpha1 "github.com/cnrancher/edge-api-server/pkg/apis/edgeapi.cattle.io/v1alpha1"
-	"github.com/rancher/lasso/pkg/client"
-	"github.com/rancher/lasso/pkg/controller"
+	clientset "github.com/cnrancher/edge-api-server/pkg/generated/clientset/versioned/typed/edgeapi.cattle.io/v1alpha1"
+	informers "github.com/cnrancher/edge-api-server/pkg/generated/informers/externalversions/edgeapi.cattle.io/v1alpha1"
+	listers "github.com/cnrancher/edge-api-server/pkg/generated/listers/edgeapi.cattle.io/v1alpha1"
 	"github.com/rancher/wrangler/pkg/apply"
 	"github.com/rancher/wrangler/pkg/condition"
 	"github.com/rancher/wrangler/pkg/generic"
@@ -77,22 +78,18 @@ type DeviceTemplateRevisionCache interface {
 type DeviceTemplateRevisionIndexer func(obj *v1alpha1.DeviceTemplateRevision) ([]string, error)
 
 type deviceTemplateRevisionController struct {
-	controller    controller.SharedController
-	client        *client.Client
-	gvk           schema.GroupVersionKind
-	groupResource schema.GroupResource
+	controllerManager *generic.ControllerManager
+	clientGetter      clientset.DeviceTemplateRevisionsGetter
+	informer          informers.DeviceTemplateRevisionInformer
+	gvk               schema.GroupVersionKind
 }
 
-func NewDeviceTemplateRevisionController(gvk schema.GroupVersionKind, resource string, namespaced bool, controller controller.SharedControllerFactory) DeviceTemplateRevisionController {
-	c := controller.ForResourceKind(gvk.GroupVersion().WithResource(resource), gvk.Kind, namespaced)
+func NewDeviceTemplateRevisionController(gvk schema.GroupVersionKind, controllerManager *generic.ControllerManager, clientGetter clientset.DeviceTemplateRevisionsGetter, informer informers.DeviceTemplateRevisionInformer) DeviceTemplateRevisionController {
 	return &deviceTemplateRevisionController{
-		controller: c,
-		client:     c.Client(),
-		gvk:        gvk,
-		groupResource: schema.GroupResource{
-			Group:    gvk.Group,
-			Resource: resource,
-		},
+		controllerManager: controllerManager,
+		clientGetter:      clientGetter,
+		informer:          informer,
+		gvk:               gvk,
 	}
 }
 
@@ -139,11 +136,12 @@ func UpdateDeviceTemplateRevisionDeepCopyOnChange(client DeviceTemplateRevisionC
 }
 
 func (c *deviceTemplateRevisionController) AddGenericHandler(ctx context.Context, name string, handler generic.Handler) {
-	c.controller.RegisterHandler(ctx, name, controller.SharedControllerHandlerFunc(handler))
+	c.controllerManager.AddHandler(ctx, c.gvk, c.informer.Informer(), name, handler)
 }
 
 func (c *deviceTemplateRevisionController) AddGenericRemoveHandler(ctx context.Context, name string, handler generic.Handler) {
-	c.AddGenericHandler(ctx, name, generic.NewRemoveHandler(name, c.Updater(), handler))
+	removeHandler := generic.NewRemoveHandler(name, c.Updater(), handler)
+	c.controllerManager.AddHandler(ctx, c.gvk, c.informer.Informer(), name, removeHandler)
 }
 
 func (c *deviceTemplateRevisionController) OnChange(ctx context.Context, name string, sync DeviceTemplateRevisionHandler) {
@@ -151,19 +149,20 @@ func (c *deviceTemplateRevisionController) OnChange(ctx context.Context, name st
 }
 
 func (c *deviceTemplateRevisionController) OnRemove(ctx context.Context, name string, sync DeviceTemplateRevisionHandler) {
-	c.AddGenericHandler(ctx, name, generic.NewRemoveHandler(name, c.Updater(), FromDeviceTemplateRevisionHandlerToHandler(sync)))
+	removeHandler := generic.NewRemoveHandler(name, c.Updater(), FromDeviceTemplateRevisionHandlerToHandler(sync))
+	c.AddGenericHandler(ctx, name, removeHandler)
 }
 
 func (c *deviceTemplateRevisionController) Enqueue(namespace, name string) {
-	c.controller.Enqueue(namespace, name)
+	c.controllerManager.Enqueue(c.gvk, c.informer.Informer(), namespace, name)
 }
 
 func (c *deviceTemplateRevisionController) EnqueueAfter(namespace, name string, duration time.Duration) {
-	c.controller.EnqueueAfter(namespace, name, duration)
+	c.controllerManager.EnqueueAfter(c.gvk, c.informer.Informer(), namespace, name, duration)
 }
 
 func (c *deviceTemplateRevisionController) Informer() cache.SharedIndexInformer {
-	return c.controller.Informer()
+	return c.informer.Informer()
 }
 
 func (c *deviceTemplateRevisionController) GroupVersionKind() schema.GroupVersionKind {
@@ -172,75 +171,57 @@ func (c *deviceTemplateRevisionController) GroupVersionKind() schema.GroupVersio
 
 func (c *deviceTemplateRevisionController) Cache() DeviceTemplateRevisionCache {
 	return &deviceTemplateRevisionCache{
-		indexer:  c.Informer().GetIndexer(),
-		resource: c.groupResource,
+		lister:  c.informer.Lister(),
+		indexer: c.informer.Informer().GetIndexer(),
 	}
 }
 
 func (c *deviceTemplateRevisionController) Create(obj *v1alpha1.DeviceTemplateRevision) (*v1alpha1.DeviceTemplateRevision, error) {
-	result := &v1alpha1.DeviceTemplateRevision{}
-	return result, c.client.Create(context.TODO(), obj.Namespace, obj, result, metav1.CreateOptions{})
+	return c.clientGetter.DeviceTemplateRevisions(obj.Namespace).Create(context.TODO(), obj, metav1.CreateOptions{})
 }
 
 func (c *deviceTemplateRevisionController) Update(obj *v1alpha1.DeviceTemplateRevision) (*v1alpha1.DeviceTemplateRevision, error) {
-	result := &v1alpha1.DeviceTemplateRevision{}
-	return result, c.client.Update(context.TODO(), obj.Namespace, obj, result, metav1.UpdateOptions{})
+	return c.clientGetter.DeviceTemplateRevisions(obj.Namespace).Update(context.TODO(), obj, metav1.UpdateOptions{})
 }
 
 func (c *deviceTemplateRevisionController) UpdateStatus(obj *v1alpha1.DeviceTemplateRevision) (*v1alpha1.DeviceTemplateRevision, error) {
-	result := &v1alpha1.DeviceTemplateRevision{}
-	return result, c.client.UpdateStatus(context.TODO(), obj.Namespace, obj, result, metav1.UpdateOptions{})
+	return c.clientGetter.DeviceTemplateRevisions(obj.Namespace).UpdateStatus(context.TODO(), obj, metav1.UpdateOptions{})
 }
 
 func (c *deviceTemplateRevisionController) Delete(namespace, name string, options *metav1.DeleteOptions) error {
 	if options == nil {
 		options = &metav1.DeleteOptions{}
 	}
-	return c.client.Delete(context.TODO(), namespace, name, *options)
+	return c.clientGetter.DeviceTemplateRevisions(namespace).Delete(context.TODO(), name, *options)
 }
 
 func (c *deviceTemplateRevisionController) Get(namespace, name string, options metav1.GetOptions) (*v1alpha1.DeviceTemplateRevision, error) {
-	result := &v1alpha1.DeviceTemplateRevision{}
-	return result, c.client.Get(context.TODO(), namespace, name, result, options)
+	return c.clientGetter.DeviceTemplateRevisions(namespace).Get(context.TODO(), name, options)
 }
 
 func (c *deviceTemplateRevisionController) List(namespace string, opts metav1.ListOptions) (*v1alpha1.DeviceTemplateRevisionList, error) {
-	result := &v1alpha1.DeviceTemplateRevisionList{}
-	return result, c.client.List(context.TODO(), namespace, result, opts)
+	return c.clientGetter.DeviceTemplateRevisions(namespace).List(context.TODO(), opts)
 }
 
 func (c *deviceTemplateRevisionController) Watch(namespace string, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.client.Watch(context.TODO(), namespace, opts)
+	return c.clientGetter.DeviceTemplateRevisions(namespace).Watch(context.TODO(), opts)
 }
 
-func (c *deviceTemplateRevisionController) Patch(namespace, name string, pt types.PatchType, data []byte, subresources ...string) (*v1alpha1.DeviceTemplateRevision, error) {
-	result := &v1alpha1.DeviceTemplateRevision{}
-	return result, c.client.Patch(context.TODO(), namespace, name, pt, data, result, metav1.PatchOptions{}, subresources...)
+func (c *deviceTemplateRevisionController) Patch(namespace, name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.DeviceTemplateRevision, err error) {
+	return c.clientGetter.DeviceTemplateRevisions(namespace).Patch(context.TODO(), name, pt, data, metav1.PatchOptions{}, subresources...)
 }
 
 type deviceTemplateRevisionCache struct {
-	indexer  cache.Indexer
-	resource schema.GroupResource
+	lister  listers.DeviceTemplateRevisionLister
+	indexer cache.Indexer
 }
 
 func (c *deviceTemplateRevisionCache) Get(namespace, name string) (*v1alpha1.DeviceTemplateRevision, error) {
-	obj, exists, err := c.indexer.GetByKey(namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(c.resource, name)
-	}
-	return obj.(*v1alpha1.DeviceTemplateRevision), nil
+	return c.lister.DeviceTemplateRevisions(namespace).Get(name)
 }
 
-func (c *deviceTemplateRevisionCache) List(namespace string, selector labels.Selector) (ret []*v1alpha1.DeviceTemplateRevision, err error) {
-
-	err = cache.ListAllByNamespace(c.indexer, namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.DeviceTemplateRevision))
-	})
-
-	return ret, err
+func (c *deviceTemplateRevisionCache) List(namespace string, selector labels.Selector) ([]*v1alpha1.DeviceTemplateRevision, error) {
+	return c.lister.DeviceTemplateRevisions(namespace).List(selector)
 }
 
 func (c *deviceTemplateRevisionCache) AddIndexer(indexName string, indexer DeviceTemplateRevisionIndexer) {

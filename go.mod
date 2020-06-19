@@ -4,6 +4,8 @@ go 1.13
 
 replace (
 	github.com/crewjam/saml => github.com/rancher/saml v0.0.0-20180713225824-ce1532152fde
+	github.com/rancher/wrangler => github.com/rancher/wrangler v0.6.0
+	github.com/rancher/wrangler-api => github.com/rancher/wrangler-api v0.6.0
 	k8s.io/client-go => k8s.io/client-go v0.18.0
 )
 
@@ -11,11 +13,12 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gorilla/mux v1.7.3
 	github.com/pkg/errors v0.9.1
+	github.com/rancher/apiserver v0.0.0-20200612212259-10457317eb0b
 	github.com/rancher/lasso v0.0.0-20200515155337-a34e1e26ad91
-	github.com/rancher/steve v0.0.0-20200602155142-445acdc2408e
+	github.com/rancher/steve v0.0.0-20200612212358-02b060294531
 	github.com/rancher/wrangler v0.6.2-0.20200515155908-1923f3f8ec3f
 	github.com/sirupsen/logrus v1.4.2
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.1
 	github.com/urfave/cli v1.22.2
 	gopkg.in/yaml.v2 v2.2.8
 	gotest.tools v2.2.0+incompatible

@@ -23,11 +23,11 @@ import (
 	"time"
 
 	v1alpha1 "github.com/cnrancher/edge-api-server/pkg/apis/edgeapi.cattle.io/v1alpha1"
-	"github.com/rancher/lasso/pkg/client"
-	"github.com/rancher/lasso/pkg/controller"
+	clientset "github.com/cnrancher/edge-api-server/pkg/generated/clientset/versioned/typed/edgeapi.cattle.io/v1alpha1"
+	informers "github.com/cnrancher/edge-api-server/pkg/generated/informers/externalversions/edgeapi.cattle.io/v1alpha1"
+	listers "github.com/cnrancher/edge-api-server/pkg/generated/listers/edgeapi.cattle.io/v1alpha1"
 	"github.com/rancher/wrangler/pkg/generic"
 	"k8s.io/apimachinery/pkg/api/equality"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -74,22 +74,18 @@ type SettingCache interface {
 type SettingIndexer func(obj *v1alpha1.Setting) ([]string, error)
 
 type settingController struct {
-	controller    controller.SharedController
-	client        *client.Client
-	gvk           schema.GroupVersionKind
-	groupResource schema.GroupResource
+	controllerManager *generic.ControllerManager
+	clientGetter      clientset.SettingsGetter
+	informer          informers.SettingInformer
+	gvk               schema.GroupVersionKind
 }
 
-func NewSettingController(gvk schema.GroupVersionKind, resource string, namespaced bool, controller controller.SharedControllerFactory) SettingController {
-	c := controller.ForResourceKind(gvk.GroupVersion().WithResource(resource), gvk.Kind, namespaced)
+func NewSettingController(gvk schema.GroupVersionKind, controllerManager *generic.ControllerManager, clientGetter clientset.SettingsGetter, informer informers.SettingInformer) SettingController {
 	return &settingController{
-		controller: c,
-		client:     c.Client(),
-		gvk:        gvk,
-		groupResource: schema.GroupResource{
-			Group:    gvk.Group,
-			Resource: resource,
-		},
+		controllerManager: controllerManager,
+		clientGetter:      clientGetter,
+		informer:          informer,
+		gvk:               gvk,
 	}
 }
 
@@ -136,11 +132,12 @@ func UpdateSettingDeepCopyOnChange(client SettingClient, obj *v1alpha1.Setting, 
 }
 
 func (c *settingController) AddGenericHandler(ctx context.Context, name string, handler generic.Handler) {
-	c.controller.RegisterHandler(ctx, name, controller.SharedControllerHandlerFunc(handler))
+	c.controllerManager.AddHandler(ctx, c.gvk, c.informer.Informer(), name, handler)
 }
 
 func (c *settingController) AddGenericRemoveHandler(ctx context.Context, name string, handler generic.Handler) {
-	c.AddGenericHandler(ctx, name, generic.NewRemoveHandler(name, c.Updater(), handler))
+	removeHandler := generic.NewRemoveHandler(name, c.Updater(), handler)
+	c.controllerManager.AddHandler(ctx, c.gvk, c.informer.Informer(), name, removeHandler)
 }
 
 func (c *settingController) OnChange(ctx context.Context, name string, sync SettingHandler) {
@@ -148,19 +145,20 @@ func (c *settingController) OnChange(ctx context.Context, name string, sync Sett
 }
 
 func (c *settingController) OnRemove(ctx context.Context, name string, sync SettingHandler) {
-	c.AddGenericHandler(ctx, name, generic.NewRemoveHandler(name, c.Updater(), FromSettingHandlerToHandler(sync)))
+	removeHandler := generic.NewRemoveHandler(name, c.Updater(), FromSettingHandlerToHandler(sync))
+	c.AddGenericHandler(ctx, name, removeHandler)
 }
 
 func (c *settingController) Enqueue(namespace, name string) {
-	c.controller.Enqueue(namespace, name)
+	c.controllerManager.Enqueue(c.gvk, c.informer.Informer(), namespace, name)
 }
 
 func (c *settingController) EnqueueAfter(namespace, name string, duration time.Duration) {
-	c.controller.EnqueueAfter(namespace, name, duration)
+	c.controllerManager.EnqueueAfter(c.gvk, c.informer.Informer(), namespace, name, duration)
 }
 
 func (c *settingController) Informer() cache.SharedIndexInformer {
-	return c.controller.Informer()
+	return c.informer.Informer()
 }
 
 func (c *settingController) GroupVersionKind() schema.GroupVersionKind {
@@ -169,70 +167,53 @@ func (c *settingController) GroupVersionKind() schema.GroupVersionKind {
 
 func (c *settingController) Cache() SettingCache {
 	return &settingCache{
-		indexer:  c.Informer().GetIndexer(),
-		resource: c.groupResource,
+		lister:  c.informer.Lister(),
+		indexer: c.informer.Informer().GetIndexer(),
 	}
 }
 
 func (c *settingController) Create(obj *v1alpha1.Setting) (*v1alpha1.Setting, error) {
-	result := &v1alpha1.Setting{}
-	return result, c.client.Create(context.TODO(), obj.Namespace, obj, result, metav1.CreateOptions{})
+	return c.clientGetter.Settings(obj.Namespace).Create(context.TODO(), obj, metav1.CreateOptions{})
 }
 
 func (c *settingController) Update(obj *v1alpha1.Setting) (*v1alpha1.Setting, error) {
-	result := &v1alpha1.Setting{}
-	return result, c.client.Update(context.TODO(), obj.Namespace, obj, result, metav1.UpdateOptions{})
+	return c.clientGetter.Settings(obj.Namespace).Update(context.TODO(), obj, metav1.UpdateOptions{})
 }
 
 func (c *settingController) Delete(namespace, name string, options *metav1.DeleteOptions) error {
 	if options == nil {
 		options = &metav1.DeleteOptions{}
 	}
-	return c.client.Delete(context.TODO(), namespace, name, *options)
+	return c.clientGetter.Settings(namespace).Delete(context.TODO(), name, *options)
 }
 
 func (c *settingController) Get(namespace, name string, options metav1.GetOptions) (*v1alpha1.Setting, error) {
-	result := &v1alpha1.Setting{}
-	return result, c.client.Get(context.TODO(), namespace, name, result, options)
+	return c.clientGetter.Settings(namespace).Get(context.TODO(), name, options)
 }
 
 func (c *settingController) List(namespace string, opts metav1.ListOptions) (*v1alpha1.SettingList, error) {
-	result := &v1alpha1.SettingList{}
-	return result, c.client.List(context.TODO(), namespace, result, opts)
+	return c.clientGetter.Settings(namespace).List(context.TODO(), opts)
 }
 
 func (c *settingController) Watch(namespace string, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.client.Watch(context.TODO(), namespace, opts)
+	return c.clientGetter.Settings(namespace).Watch(context.TODO(), opts)
 }
 
-func (c *settingController) Patch(namespace, name string, pt types.PatchType, data []byte, subresources ...string) (*v1alpha1.Setting, error) {
-	result := &v1alpha1.Setting{}
-	return result, c.client.Patch(context.TODO(), namespace, name, pt, data, result, metav1.PatchOptions{}, subresources...)
+func (c *settingController) Patch(namespace, name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Setting, err error) {
+	return c.clientGetter.Settings(namespace).Patch(context.TODO(), name, pt, data, metav1.PatchOptions{}, subresources...)
 }
 
 type settingCache struct {
-	indexer  cache.Indexer
-	resource schema.GroupResource
+	lister  listers.SettingLister
+	indexer cache.Indexer
 }
 
 func (c *settingCache) Get(namespace, name string) (*v1alpha1.Setting, error) {
-	obj, exists, err := c.indexer.GetByKey(namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(c.resource, name)
-	}
-	return obj.(*v1alpha1.Setting), nil
+	return c.lister.Settings(namespace).Get(name)
 }
 
-func (c *settingCache) List(namespace string, selector labels.Selector) (ret []*v1alpha1.Setting, err error) {
-
-	err = cache.ListAllByNamespace(c.indexer, namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.Setting))
-	})
-
-	return ret, err
+func (c *settingCache) List(namespace string, selector labels.Selector) ([]*v1alpha1.Setting, error) {
+	return c.lister.Settings(namespace).List(selector)
 }
 
 func (c *settingCache) AddIndexer(indexName string, indexer SettingIndexer) {

@@ -23,8 +23,9 @@ import (
 	"time"
 
 	v1alpha1 "github.com/cnrancher/edge-api-server/pkg/apis/edgeapi.cattle.io/v1alpha1"
-	"github.com/rancher/lasso/pkg/client"
-	"github.com/rancher/lasso/pkg/controller"
+	clientset "github.com/cnrancher/edge-api-server/pkg/generated/clientset/versioned/typed/edgeapi.cattle.io/v1alpha1"
+	informers "github.com/cnrancher/edge-api-server/pkg/generated/informers/externalversions/edgeapi.cattle.io/v1alpha1"
+	listers "github.com/cnrancher/edge-api-server/pkg/generated/listers/edgeapi.cattle.io/v1alpha1"
 	"github.com/rancher/wrangler/pkg/apply"
 	"github.com/rancher/wrangler/pkg/condition"
 	"github.com/rancher/wrangler/pkg/generic"
@@ -77,22 +78,18 @@ type CatalogCache interface {
 type CatalogIndexer func(obj *v1alpha1.Catalog) ([]string, error)
 
 type catalogController struct {
-	controller    controller.SharedController
-	client        *client.Client
-	gvk           schema.GroupVersionKind
-	groupResource schema.GroupResource
+	controllerManager *generic.ControllerManager
+	clientGetter      clientset.CatalogsGetter
+	informer          informers.CatalogInformer
+	gvk               schema.GroupVersionKind
 }
 
-func NewCatalogController(gvk schema.GroupVersionKind, resource string, namespaced bool, controller controller.SharedControllerFactory) CatalogController {
-	c := controller.ForResourceKind(gvk.GroupVersion().WithResource(resource), gvk.Kind, namespaced)
+func NewCatalogController(gvk schema.GroupVersionKind, controllerManager *generic.ControllerManager, clientGetter clientset.CatalogsGetter, informer informers.CatalogInformer) CatalogController {
 	return &catalogController{
-		controller: c,
-		client:     c.Client(),
-		gvk:        gvk,
-		groupResource: schema.GroupResource{
-			Group:    gvk.Group,
-			Resource: resource,
-		},
+		controllerManager: controllerManager,
+		clientGetter:      clientGetter,
+		informer:          informer,
+		gvk:               gvk,
 	}
 }
 
@@ -139,11 +136,12 @@ func UpdateCatalogDeepCopyOnChange(client CatalogClient, obj *v1alpha1.Catalog, 
 }
 
 func (c *catalogController) AddGenericHandler(ctx context.Context, name string, handler generic.Handler) {
-	c.controller.RegisterHandler(ctx, name, controller.SharedControllerHandlerFunc(handler))
+	c.controllerManager.AddHandler(ctx, c.gvk, c.informer.Informer(), name, handler)
 }
 
 func (c *catalogController) AddGenericRemoveHandler(ctx context.Context, name string, handler generic.Handler) {
-	c.AddGenericHandler(ctx, name, generic.NewRemoveHandler(name, c.Updater(), handler))
+	removeHandler := generic.NewRemoveHandler(name, c.Updater(), handler)
+	c.controllerManager.AddHandler(ctx, c.gvk, c.informer.Informer(), name, removeHandler)
 }
 
 func (c *catalogController) OnChange(ctx context.Context, name string, sync CatalogHandler) {
@@ -151,19 +149,20 @@ func (c *catalogController) OnChange(ctx context.Context, name string, sync Cata
 }
 
 func (c *catalogController) OnRemove(ctx context.Context, name string, sync CatalogHandler) {
-	c.AddGenericHandler(ctx, name, generic.NewRemoveHandler(name, c.Updater(), FromCatalogHandlerToHandler(sync)))
+	removeHandler := generic.NewRemoveHandler(name, c.Updater(), FromCatalogHandlerToHandler(sync))
+	c.AddGenericHandler(ctx, name, removeHandler)
 }
 
 func (c *catalogController) Enqueue(namespace, name string) {
-	c.controller.Enqueue(namespace, name)
+	c.controllerManager.Enqueue(c.gvk, c.informer.Informer(), namespace, name)
 }
 
 func (c *catalogController) EnqueueAfter(namespace, name string, duration time.Duration) {
-	c.controller.EnqueueAfter(namespace, name, duration)
+	c.controllerManager.EnqueueAfter(c.gvk, c.informer.Informer(), namespace, name, duration)
 }
 
 func (c *catalogController) Informer() cache.SharedIndexInformer {
-	return c.controller.Informer()
+	return c.informer.Informer()
 }
 
 func (c *catalogController) GroupVersionKind() schema.GroupVersionKind {
@@ -172,75 +171,57 @@ func (c *catalogController) GroupVersionKind() schema.GroupVersionKind {
 
 func (c *catalogController) Cache() CatalogCache {
 	return &catalogCache{
-		indexer:  c.Informer().GetIndexer(),
-		resource: c.groupResource,
+		lister:  c.informer.Lister(),
+		indexer: c.informer.Informer().GetIndexer(),
 	}
 }
 
 func (c *catalogController) Create(obj *v1alpha1.Catalog) (*v1alpha1.Catalog, error) {
-	result := &v1alpha1.Catalog{}
-	return result, c.client.Create(context.TODO(), obj.Namespace, obj, result, metav1.CreateOptions{})
+	return c.clientGetter.Catalogs(obj.Namespace).Create(context.TODO(), obj, metav1.CreateOptions{})
 }
 
 func (c *catalogController) Update(obj *v1alpha1.Catalog) (*v1alpha1.Catalog, error) {
-	result := &v1alpha1.Catalog{}
-	return result, c.client.Update(context.TODO(), obj.Namespace, obj, result, metav1.UpdateOptions{})
+	return c.clientGetter.Catalogs(obj.Namespace).Update(context.TODO(), obj, metav1.UpdateOptions{})
 }
 
 func (c *catalogController) UpdateStatus(obj *v1alpha1.Catalog) (*v1alpha1.Catalog, error) {
-	result := &v1alpha1.Catalog{}
-	return result, c.client.UpdateStatus(context.TODO(), obj.Namespace, obj, result, metav1.UpdateOptions{})
+	return c.clientGetter.Catalogs(obj.Namespace).UpdateStatus(context.TODO(), obj, metav1.UpdateOptions{})
 }
 
 func (c *catalogController) Delete(namespace, name string, options *metav1.DeleteOptions) error {
 	if options == nil {
 		options = &metav1.DeleteOptions{}
 	}
-	return c.client.Delete(context.TODO(), namespace, name, *options)
+	return c.clientGetter.Catalogs(namespace).Delete(context.TODO(), name, *options)
 }
 
 func (c *catalogController) Get(namespace, name string, options metav1.GetOptions) (*v1alpha1.Catalog, error) {
-	result := &v1alpha1.Catalog{}
-	return result, c.client.Get(context.TODO(), namespace, name, result, options)
+	return c.clientGetter.Catalogs(namespace).Get(context.TODO(), name, options)
 }
 
 func (c *catalogController) List(namespace string, opts metav1.ListOptions) (*v1alpha1.CatalogList, error) {
-	result := &v1alpha1.CatalogList{}
-	return result, c.client.List(context.TODO(), namespace, result, opts)
+	return c.clientGetter.Catalogs(namespace).List(context.TODO(), opts)
 }
 
 func (c *catalogController) Watch(namespace string, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.client.Watch(context.TODO(), namespace, opts)
+	return c.clientGetter.Catalogs(namespace).Watch(context.TODO(), opts)
 }
 
-func (c *catalogController) Patch(namespace, name string, pt types.PatchType, data []byte, subresources ...string) (*v1alpha1.Catalog, error) {
-	result := &v1alpha1.Catalog{}
-	return result, c.client.Patch(context.TODO(), namespace, name, pt, data, result, metav1.PatchOptions{}, subresources...)
+func (c *catalogController) Patch(namespace, name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Catalog, err error) {
+	return c.clientGetter.Catalogs(namespace).Patch(context.TODO(), name, pt, data, metav1.PatchOptions{}, subresources...)
 }
 
 type catalogCache struct {
-	indexer  cache.Indexer
-	resource schema.GroupResource
+	lister  listers.CatalogLister
+	indexer cache.Indexer
 }
 
 func (c *catalogCache) Get(namespace, name string) (*v1alpha1.Catalog, error) {
-	obj, exists, err := c.indexer.GetByKey(namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(c.resource, name)
-	}
-	return obj.(*v1alpha1.Catalog), nil
+	return c.lister.Catalogs(namespace).Get(name)
 }
 
-func (c *catalogCache) List(namespace string, selector labels.Selector) (ret []*v1alpha1.Catalog, err error) {
-
-	err = cache.ListAllByNamespace(c.indexer, namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.Catalog))
-	})
-
-	return ret, err
+func (c *catalogCache) List(namespace string, selector labels.Selector) ([]*v1alpha1.Catalog, error) {
+	return c.lister.Catalogs(namespace).List(selector)
 }
 
 func (c *catalogCache) AddIndexer(indexName string, indexer CatalogIndexer) {
