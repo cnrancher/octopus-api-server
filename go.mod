@@ -15,8 +15,10 @@ require (
 	github.com/rancher/steve v0.0.0-20200602155142-445acdc2408e
 	github.com/rancher/wrangler v0.6.2-0.20200515155908-1923f3f8ec3f
 	github.com/sirupsen/logrus v1.4.2
+	github.com/stretchr/testify v1.4.0
 	github.com/urfave/cli v1.22.2
 	gopkg.in/yaml.v2 v2.2.8
+	gotest.tools v2.2.0+incompatible
 	k8s.io/api v0.18.0
 	k8s.io/apimachinery v0.18.0
 	k8s.io/apiserver v0.18.0

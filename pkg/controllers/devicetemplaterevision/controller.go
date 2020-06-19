@@ -53,9 +53,13 @@ func (c *Controller) OnChanged(key string, obj *v1alpha1.DeviceTemplateRevision)
 	if obj == nil || obj.DeletionTimestamp != nil {
 		return nil, nil
 	}
+
 	deviceTemplate, err := c.templateLister.Get(obj.Namespace, obj.Spec.DeviceTemplateName)
 	if err != nil {
 		return nil, err
+	}
+	if deviceTemplate.DeletionTimestamp != nil {
+		return nil, nil
 	}
 
 	objCopy := obj.DeepCopy()
@@ -79,10 +83,15 @@ func (c *Controller) OnRemoved(key string, obj *v1alpha1.DeviceTemplateRevision)
 		if !apierrs.IsNotFound(err) {
 			return nil, err
 		}
-		return nil, nil
+		return obj, c.revisionController.Delete(obj.Namespace, obj.Name, &metav1.DeleteOptions{})
 	}
+
+	if deviceTemplate.DeletionTimestamp != nil {
+		return obj, c.revisionController.Delete(obj.Namespace, obj.Name, &metav1.DeleteOptions{})
+	}
+
 	if err := c.SyncDeviceTemplateDefaultRevision(obj, deviceTemplate, true); err != nil {
-		return nil, err
+		return obj, c.revisionController.Delete(obj.Namespace, obj.Name, &metav1.DeleteOptions{})
 	}
 
 	return obj, c.revisionController.Delete(obj.Namespace, obj.Name, &metav1.DeleteOptions{})
