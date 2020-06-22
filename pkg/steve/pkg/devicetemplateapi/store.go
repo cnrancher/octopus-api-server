@@ -76,7 +76,7 @@ func (s *Store) Update(apiOp *types.APIRequest, schema *types.APISchema, data ty
 	}
 
 	if err := ValidTemplateRevisionIsExist(s.ctx, &deviceTemplate, s.revisionController); err != nil {
-		logrus.Errorf("update device template revision is not exist", err.Error())
+		logrus.Errorf("update device template revision is not exist, error: %s", err.Error())
 		return data, err
 	}
 
