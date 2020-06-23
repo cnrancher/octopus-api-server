@@ -16,13 +16,15 @@ func main() {
 		Boilerplate:   "scripts/boilerplate.go.txt",
 		Groups: map[string]args.Group{
 			"edgeapi.cattle.io": {
+				PackageName: "edgeapi.cattle.io",
 				Types: []interface{}{
 					v1alpha1.Catalog{},
 					v1alpha1.DeviceTemplate{},
-					v1alpha1.Setting{},
 					v1alpha1.DeviceTemplateRevision{},
+					v1alpha1.Setting{},
 				},
-				GenerateTypes: true,
+				GenerateTypes:   true,
+				GenerateClients: true,
 			},
 		},
 	})

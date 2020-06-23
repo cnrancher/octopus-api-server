@@ -15,7 +15,7 @@ import (
 
 const (
 	issuer           = "EdgeServer"
-	ttlSeconds       = 604800
+	ttlSeconds       = 604800 //7 days
 	actionQuery      = "action"
 	loginActionName  = "login"
 	logoutActionName = "logout"
