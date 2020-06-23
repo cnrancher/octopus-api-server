@@ -7,7 +7,7 @@ import (
 	"github.com/cnrancher/edge-api-server/pkg/extendapi"
 	"github.com/cnrancher/edge-api-server/pkg/server/ui"
 	"github.com/gorilla/mux"
-	"github.com/rancher/steve/pkg/responsewriter"
+	"github.com/rancher/apiserver/pkg/middleware"
 )
 
 func SetupLocalHandler(server *EdgeServer) http.Handler {
@@ -21,8 +21,8 @@ func SetupLocalHandler(server *EdgeServer) http.Handler {
 	r.Path("/v2-public/health/datastorage").Handler(dataStorageHealthHandler)
 
 	//API UI
-	uiContent := responsewriter.NewMiddlewareChain(responsewriter.Gzip, responsewriter.DenyFrameOptions,
-		responsewriter.CacheMiddleware("json", "js", "css")).Handler(ui.Content())
+	uiContent := middleware.NewMiddlewareChain(middleware.Gzip, middleware.DenyFrameOptions,
+		middleware.CacheMiddleware("json", "js", "css")).Handler(ui.Content())
 
 	r.PathPrefix("/api-ui").Handler(uiContent)
 	r.NotFoundHandler = ui.UI(http.NotFoundHandler())

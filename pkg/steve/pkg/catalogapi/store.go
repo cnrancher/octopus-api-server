@@ -3,8 +3,8 @@ package catalogapi
 import (
 	"github.com/cnrancher/edge-api-server/pkg/apis/edgeapi.cattle.io/v1alpha1"
 	catalogcontroller "github.com/cnrancher/edge-api-server/pkg/generated/controllers/edgeapi.cattle.io/v1alpha1"
+	"github.com/rancher/apiserver/pkg/types"
 	"github.com/rancher/steve/pkg/accesscontrol"
-	"github.com/rancher/steve/pkg/schemaserver/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
