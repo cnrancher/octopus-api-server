@@ -10,6 +10,5 @@ spec:
   deviceResource: modbusdevices
   labels:
     foo: bar
-  displayName: my-modbus-template
-  description: template example
-  defaultRevisionName: ''
+  defaultRevisionName: ""
+  description: "template example"
