@@ -1,6 +1,7 @@
 apiVersion: edgeapi.cattle.io/v1alpha1
 kind: DeviceTemplateRevision
 metadata:
+  name: v1
   namespace: default
 spec:
   displayName: v1

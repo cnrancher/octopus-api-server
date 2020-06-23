@@ -23,6 +23,11 @@ const (
 	deviceTemplateKindName    = "DeviceTemplate"
 )
 
+const (
+	templateDeviceTypeName    = "edgeapi.cattle.io/template-device-type"
+	templateDeviceVersionName = "edgeapi.cattle.io/template-device-version"
+)
+
 type Controller struct {
 	context            context.Context
 	templateController controllers.DeviceTemplateController
@@ -58,6 +63,14 @@ func (c *Controller) OnChanged(key string, obj *v1alpha1.DeviceTemplateRevision)
 		return nil, err
 	}
 
+	if len(obj.Labels) <= 0 {
+		obj.Labels = map[string]string{
+			templateDeviceTypeName:    deviceTemplate.Spec.DeviceKind,
+			templateDeviceVersionName: deviceTemplate.Spec.DeviceVersion,
+			templateRevisionReference: obj.Spec.DeviceTemplateName,
+		}
+	}
+
 	objCopy := obj.DeepCopy()
 	objCopy.Status.UpdatedAt = metav1.Time{Time: time.Now()}
 	objCopy.OwnerReferences = append(objCopy.OwnerReferences[:0], SetRevisionOwner(objCopy, deviceTemplate.UID))
@@ -79,7 +92,7 @@ func (c *Controller) OnRemoved(key string, obj *v1alpha1.DeviceTemplateRevision)
 		if !apierrs.IsNotFound(err) {
 			return nil, err
 		}
-		return nil, nil
+		return obj, c.revisionController.Delete(obj.Namespace, obj.Name, &metav1.DeleteOptions{})
 	}
 	if err := c.SyncDeviceTemplateDefaultRevision(obj, deviceTemplate, true); err != nil {
 		return nil, err
@@ -95,7 +108,6 @@ func (c *Controller) SyncDeviceTemplateDefaultRevision(obj *v1alpha1.DeviceTempl
 		return err
 	}
 	revisionCount := len(revisions)
-
 	if revisionCount == 1 {
 		revisionName := fmt.Sprintf(`%s/%s`, obj.Namespace, revisions[0].Name)
 		if onRemove {
