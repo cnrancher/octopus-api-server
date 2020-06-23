@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/cnrancher/edge-api-server/pkg/settings"
-	"github.com/rancher/steve/pkg/schemaserver/parse"
+	"github.com/rancher/apiserver/pkg/parse"
 	"github.com/sirupsen/logrus"
 )
 

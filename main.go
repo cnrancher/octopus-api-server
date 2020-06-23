@@ -69,7 +69,7 @@ func main() {
 	}
 }
 
-func run(cli *cli.Context, config server.Config) error {
+func run(_ *cli.Context, config server.Config) error {
 	debugConfig.MustSetupDebug()
 	klog.Infof("Edge api server version %s is starting", version.FriendlyVersion())
 

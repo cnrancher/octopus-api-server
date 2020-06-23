@@ -13,7 +13,7 @@ ENV EDGE_API_UI_VERSION 1.1.9
 
 RUN mkdir -p /usr/share/rancher/edge-ui && \
     cd /usr/share/rancher/edge-ui && \
-    curl -sL https://rancheredge.s3-ap-northeast-2.amazonaws.com/ui/${EDGE_UI_VERSION}.tar.gz | tar xvzf - --strip-components=1 && \
+    curl -sL https://rancheredge-ui.s3-ap-east-1.amazonaws.com/ui/dist/${EDGE_UI_VERSION}.tar.gz | tar xvzf - --strip-components=2 && \
     mkdir -p /usr/share/rancher/edge-ui/api-ui && \
     cd /usr/share/rancher/edge-ui/api-ui && \
     curl -sL https://releases.rancher.com/api-ui/${EDGE_API_UI_VERSION}.tar.gz | tar xvzf - --strip-components=1 && \

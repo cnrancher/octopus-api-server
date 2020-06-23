@@ -11,8 +11,9 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gorilla/mux v1.7.3
 	github.com/pkg/errors v0.9.1
+	github.com/rancher/apiserver v0.0.0-20200612212259-10457317eb0b
 	github.com/rancher/lasso v0.0.0-20200515155337-a34e1e26ad91
-	github.com/rancher/steve v0.0.0-20200602155142-445acdc2408e
+	github.com/rancher/steve v0.0.0-20200612212358-02b060294531
 	github.com/rancher/wrangler v0.6.2-0.20200515155908-1923f3f8ec3f
 	github.com/sirupsen/logrus v1.4.2
 	github.com/urfave/cli v1.22.2
