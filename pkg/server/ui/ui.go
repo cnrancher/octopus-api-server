@@ -30,7 +30,7 @@ func Content() http.Handler {
 func UI(next http.Handler) http.Handler {
 	_, err := os.Stat(indexHTML())
 	if err != nil {
-		logrus.Errorf("failed to get local index html: %s, error: %s", indexHTML(), err.Error())
+		logrus.Warnf("failed to get local index html: %s, error: %s", indexHTML(), err.Error())
 	}
 	local := err == nil
 	return http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {

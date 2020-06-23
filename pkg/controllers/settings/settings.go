@@ -13,7 +13,6 @@ import (
 )
 
 func Register(ctx context.Context, controller controllers.SettingController) error {
-
 	sp := &settingsProvider{
 		context:        ctx,
 		settings:       controller,
@@ -39,9 +38,9 @@ func (s *settingsProvider) Get(name string) string {
 	if value != "" {
 		return value
 	}
-	obj, err := s.settingsLister.Get("", name)
+	obj, err := s.settingsLister.Get(name)
 	if err != nil {
-		val, err := s.settings.Get("", name, v1.GetOptions{})
+		val, err := s.settings.Get(name, v1.GetOptions{})
 		if err != nil {
 			return s.fallback[name]
 		}
@@ -58,7 +57,7 @@ func (s *settingsProvider) Set(name, value string) error {
 	if envValue != "" {
 		return fmt.Errorf("setting %s can not be set because it is from environment variable", name)
 	}
-	obj, err := s.settings.Get("", name, v1.GetOptions{})
+	obj, err := s.settings.Get(name, v1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -69,7 +68,7 @@ func (s *settingsProvider) Set(name, value string) error {
 }
 
 func (s *settingsProvider) SetIfUnset(name, value string) error {
-	obj, err := s.settings.Get("", name, v1.GetOptions{})
+	obj, err := s.settings.Get(name, v1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -90,7 +89,7 @@ func (s *settingsProvider) SetAll(settingsMap map[string]settings.Setting) error
 		key := settings.GetEnvKey(name)
 		value := os.Getenv(key)
 
-		obj, err := s.settings.Get("", setting.Name, v1.GetOptions{})
+		obj, err := s.settings.Get(setting.Name, v1.GetOptions{})
 		if errors.IsNotFound(err) {
 			newSetting := &v1alpha1.Setting{
 				ObjectMeta: v1.ObjectMeta{

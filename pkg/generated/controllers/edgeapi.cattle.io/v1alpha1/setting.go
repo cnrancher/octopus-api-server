@@ -46,8 +46,8 @@ type SettingController interface {
 
 	OnChange(ctx context.Context, name string, sync SettingHandler)
 	OnRemove(ctx context.Context, name string, sync SettingHandler)
-	Enqueue(namespace, name string)
-	EnqueueAfter(namespace, name string, duration time.Duration)
+	Enqueue(name string)
+	EnqueueAfter(name string, duration time.Duration)
 
 	Cache() SettingCache
 }
@@ -56,16 +56,16 @@ type SettingClient interface {
 	Create(*v1alpha1.Setting) (*v1alpha1.Setting, error)
 	Update(*v1alpha1.Setting) (*v1alpha1.Setting, error)
 
-	Delete(namespace, name string, options *metav1.DeleteOptions) error
-	Get(namespace, name string, options metav1.GetOptions) (*v1alpha1.Setting, error)
-	List(namespace string, opts metav1.ListOptions) (*v1alpha1.SettingList, error)
-	Watch(namespace string, opts metav1.ListOptions) (watch.Interface, error)
-	Patch(namespace, name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Setting, err error)
+	Delete(name string, options *metav1.DeleteOptions) error
+	Get(name string, options metav1.GetOptions) (*v1alpha1.Setting, error)
+	List(opts metav1.ListOptions) (*v1alpha1.SettingList, error)
+	Watch(opts metav1.ListOptions) (watch.Interface, error)
+	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Setting, err error)
 }
 
 type SettingCache interface {
-	Get(namespace, name string) (*v1alpha1.Setting, error)
-	List(namespace string, selector labels.Selector) ([]*v1alpha1.Setting, error)
+	Get(name string) (*v1alpha1.Setting, error)
+	List(selector labels.Selector) ([]*v1alpha1.Setting, error)
 
 	AddIndexer(indexName string, indexer SettingIndexer)
 	GetByIndex(indexName, key string) ([]*v1alpha1.Setting, error)
@@ -151,12 +151,12 @@ func (c *settingController) OnRemove(ctx context.Context, name string, sync Sett
 	c.AddGenericHandler(ctx, name, generic.NewRemoveHandler(name, c.Updater(), FromSettingHandlerToHandler(sync)))
 }
 
-func (c *settingController) Enqueue(namespace, name string) {
-	c.controller.Enqueue(namespace, name)
+func (c *settingController) Enqueue(name string) {
+	c.controller.Enqueue("", name)
 }
 
-func (c *settingController) EnqueueAfter(namespace, name string, duration time.Duration) {
-	c.controller.EnqueueAfter(namespace, name, duration)
+func (c *settingController) EnqueueAfter(name string, duration time.Duration) {
+	c.controller.EnqueueAfter("", name, duration)
 }
 
 func (c *settingController) Informer() cache.SharedIndexInformer {
@@ -176,38 +176,38 @@ func (c *settingController) Cache() SettingCache {
 
 func (c *settingController) Create(obj *v1alpha1.Setting) (*v1alpha1.Setting, error) {
 	result := &v1alpha1.Setting{}
-	return result, c.client.Create(context.TODO(), obj.Namespace, obj, result, metav1.CreateOptions{})
+	return result, c.client.Create(context.TODO(), "", obj, result, metav1.CreateOptions{})
 }
 
 func (c *settingController) Update(obj *v1alpha1.Setting) (*v1alpha1.Setting, error) {
 	result := &v1alpha1.Setting{}
-	return result, c.client.Update(context.TODO(), obj.Namespace, obj, result, metav1.UpdateOptions{})
+	return result, c.client.Update(context.TODO(), "", obj, result, metav1.UpdateOptions{})
 }
 
-func (c *settingController) Delete(namespace, name string, options *metav1.DeleteOptions) error {
+func (c *settingController) Delete(name string, options *metav1.DeleteOptions) error {
 	if options == nil {
 		options = &metav1.DeleteOptions{}
 	}
-	return c.client.Delete(context.TODO(), namespace, name, *options)
+	return c.client.Delete(context.TODO(), "", name, *options)
 }
 
-func (c *settingController) Get(namespace, name string, options metav1.GetOptions) (*v1alpha1.Setting, error) {
+func (c *settingController) Get(name string, options metav1.GetOptions) (*v1alpha1.Setting, error) {
 	result := &v1alpha1.Setting{}
-	return result, c.client.Get(context.TODO(), namespace, name, result, options)
+	return result, c.client.Get(context.TODO(), "", name, result, options)
 }
 
-func (c *settingController) List(namespace string, opts metav1.ListOptions) (*v1alpha1.SettingList, error) {
+func (c *settingController) List(opts metav1.ListOptions) (*v1alpha1.SettingList, error) {
 	result := &v1alpha1.SettingList{}
-	return result, c.client.List(context.TODO(), namespace, result, opts)
+	return result, c.client.List(context.TODO(), "", result, opts)
 }
 
-func (c *settingController) Watch(namespace string, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.client.Watch(context.TODO(), namespace, opts)
+func (c *settingController) Watch(opts metav1.ListOptions) (watch.Interface, error) {
+	return c.client.Watch(context.TODO(), "", opts)
 }
 
-func (c *settingController) Patch(namespace, name string, pt types.PatchType, data []byte, subresources ...string) (*v1alpha1.Setting, error) {
+func (c *settingController) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (*v1alpha1.Setting, error) {
 	result := &v1alpha1.Setting{}
-	return result, c.client.Patch(context.TODO(), namespace, name, pt, data, result, metav1.PatchOptions{}, subresources...)
+	return result, c.client.Patch(context.TODO(), "", name, pt, data, result, metav1.PatchOptions{}, subresources...)
 }
 
 type settingCache struct {
@@ -215,8 +215,8 @@ type settingCache struct {
 	resource schema.GroupResource
 }
 
-func (c *settingCache) Get(namespace, name string) (*v1alpha1.Setting, error) {
-	obj, exists, err := c.indexer.GetByKey(namespace + "/" + name)
+func (c *settingCache) Get(name string) (*v1alpha1.Setting, error) {
+	obj, exists, err := c.indexer.GetByKey(name)
 	if err != nil {
 		return nil, err
 	}
@@ -226,9 +226,9 @@ func (c *settingCache) Get(namespace, name string) (*v1alpha1.Setting, error) {
 	return obj.(*v1alpha1.Setting), nil
 }
 
-func (c *settingCache) List(namespace string, selector labels.Selector) (ret []*v1alpha1.Setting, err error) {
+func (c *settingCache) List(selector labels.Selector) (ret []*v1alpha1.Setting, err error) {
 
-	err = cache.ListAllByNamespace(c.indexer, namespace, selector, func(m interface{}) {
+	err = cache.ListAll(c.indexer, selector, func(m interface{}) {
 		ret = append(ret, m.(*v1alpha1.Setting))
 	})
 
