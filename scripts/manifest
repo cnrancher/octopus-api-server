@@ -1,0 +1,7 @@
+#!/bin/bash
+set -e
+
+CURR_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+# generate all_in_one yaml
+kubectl kustomize "${CURR_DIR}/deploy/manifest" \
+    > "${CURR_DIR}/deploy/e2e/all_in_one.yaml"

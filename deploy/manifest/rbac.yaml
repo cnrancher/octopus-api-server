@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: edge-ui
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: edge-ui
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: edge-ui-rolebinding
+  labels:
+    app.kubernetes.io/name: edge-ui
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: edge-ui
+  namespace: kube-system

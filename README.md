@@ -1,7 +1,7 @@
 edge-api-server
 ========
 [![Build Status](http://drone-pandaria.cnrancher.com/api/badges/cnrancher/edge-api-server/status.svg)](http://drone-pandaria.cnrancher.com/cnrancher/edge-api-server)
-
+[![Go Report Card](https://goreportcard.com/badge/github.com/cnrancher/edge-api-server)](https://goreportcard.com/report/github.com/cnrancher/edge-api-server)
 
 This is the backend api server of the [Edge-UI](https://github.com/cnrancher/edge-ui).
 
