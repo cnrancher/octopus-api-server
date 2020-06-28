@@ -583,6 +583,12 @@ github.com/opentracing/basictracer-go v1.0.0/go.mod h1:QfBfYuafItcjQuMwinw9GhYKw
 github.com/opentracing/opentracing-go v1.0.2/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=
 github.com/opentracing/opentracing-go v1.1.0/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=
 github.com/openzipkin/zipkin-go v0.1.6/go.mod h1:QgAqvLzwWbR/WpD4A3cGpPtJrZXNIiJc5AZX7/PBEpw=
+github.com/parchk/apiserver v0.0.0-20200628083019-8e2784e80c8e h1:RfJDTwxejD4WTALm4WhQGR0lvkwC32VDny056juoHNc=
+github.com/parchk/apiserver v0.0.0-20200628083019-8e2784e80c8e/go.mod h1:8W0EwaR9dH5NDFw6mpAX437D0q+EZqKWbZyX71+z2WI=
+github.com/parchk/steve v0.0.0-20200628073507-0774b10fe448 h1:jNQEhxWtBhHsWN8H9pPTOvWIPsqjfaEWs6EG6XxjdcE=
+github.com/parchk/steve v0.0.0-20200628073507-0774b10fe448/go.mod h1:kr7NO9ePey0a3Op84NYwyTiXVah/B7MXAXAz5u5mbFw=
+github.com/parchk/steve v0.0.0-20200628084612-8c481062b067 h1:hBBsGWR7ZMwTVtueieFNBTj8HaZLBJ+ZaUVF95OVPJY=
+github.com/parchk/steve v0.0.0-20200628084612-8c481062b067/go.mod h1:dsdFk9qs1Jb/LR8Z4pHFn9tnLIFc6gs7YvHs7BwT+zc=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pascaldekloe/goe v0.1.0/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pborman/uuid v1.2.0/go.mod h1:X/NO0urCmaxf9VXbdlT7C2Yzkj2IKimNn4k+gtPdI/k=

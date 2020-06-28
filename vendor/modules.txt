@@ -72,7 +72,7 @@ github.com/prometheus/common/model
 github.com/prometheus/procfs
 github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
-# github.com/rancher/apiserver v0.0.0-20200612212259-10457317eb0b
+# github.com/rancher/apiserver v0.0.0-20200612212259-10457317eb0b => github.com/parchk/apiserver v0.0.0-20200628083019-8e2784e80c8e
 github.com/rancher/apiserver/pkg/apierror
 github.com/rancher/apiserver/pkg/builtin
 github.com/rancher/apiserver/pkg/handlers
@@ -103,7 +103,7 @@ github.com/rancher/lasso/pkg/mapper
 github.com/rancher/lasso/pkg/scheme
 # github.com/rancher/norman v0.0.0-20200517050325-f53cae161640
 github.com/rancher/norman/types/convert
-# github.com/rancher/steve v0.0.0-20200612212358-02b060294531
+# github.com/rancher/steve v0.0.0-20200612212358-02b060294531 => github.com/parchk/steve v0.0.0-20200628084612-8c481062b067
 github.com/rancher/steve/pkg/accesscontrol
 github.com/rancher/steve/pkg/attributes
 github.com/rancher/steve/pkg/auth

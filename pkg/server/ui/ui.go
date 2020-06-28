@@ -67,3 +67,17 @@ func serveIndex(resp http.ResponseWriter, req *http.Request) error {
 	_, err = io.Copy(resp, r.Body)
 	return err
 }
+
+func JSURLGetter() string {
+	if settings.UIIndex.Get() == "local" {
+		return "/api-ui/ui.min.js"
+	}
+	return ""
+}
+
+func CSSURLGetter() string {
+	if settings.UIIndex.Get() == "local" {
+		return "/api-ui/ui.min.css"
+	}
+	return ""
+}

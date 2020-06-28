@@ -4,6 +4,8 @@ go 1.13
 
 replace (
 	github.com/crewjam/saml => github.com/rancher/saml v0.0.0-20180713225824-ce1532152fde
+	github.com/rancher/apiserver => github.com/parchk/apiserver v0.0.0-20200628083019-8e2784e80c8e
+	github.com/rancher/steve => github.com/parchk/steve v0.0.0-20200628084612-8c481062b067
 	k8s.io/client-go => k8s.io/client-go v0.18.0
 )
 

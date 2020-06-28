@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/cnrancher/edge-api-server/pkg/server/ui"
 	"github.com/cnrancher/edge-api-server/pkg/steve/pkg/catalogapi"
 	"github.com/cnrancher/edge-api-server/pkg/steve/pkg/devicetemplateapi"
 	"github.com/cnrancher/edge-api-server/pkg/steve/pkg/devicetemplaterevisionapi"
@@ -120,6 +121,8 @@ func newSteveServer(ctx context.Context, edgeServer *EdgeServer) (*steveserver.S
 			deviceTemplateAPIServer.Setup,
 			deviceTemplateRevisionAPIServer.Setup,
 		},
+		CssGetter: ui.CSSURLGetter,
+		JsGetter:  ui.JSURLGetter,
 	}, nil
 }
 

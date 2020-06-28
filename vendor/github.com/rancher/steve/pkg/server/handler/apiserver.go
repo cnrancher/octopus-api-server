@@ -6,6 +6,7 @@ import (
 	"github.com/rancher/apiserver/pkg/server"
 	"github.com/rancher/apiserver/pkg/types"
 	"github.com/rancher/apiserver/pkg/urlbuilder"
+	"github.com/rancher/apiserver/pkg/writer"
 	"github.com/rancher/steve/pkg/accesscontrol"
 	"github.com/rancher/steve/pkg/auth"
 	k8sproxy "github.com/rancher/steve/pkg/proxy"
@@ -16,7 +17,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func New(cfg *rest.Config, sf schema.Factory, authMiddleware auth.Middleware, next http.Handler, routerFunc router.RouterFunc) (http.Handler, error) {
+func New(cfg *rest.Config, sf schema.Factory, authMiddleware auth.Middleware, next http.Handler, routerFunc router.RouterFunc, cssGetter writer.StringGetter, jsGetter writer.StringGetter, apiUIVersionGetter writer.StringGetter) (http.Handler, error) {
 	var (
 		proxy http.Handler
 		err   error
@@ -27,6 +28,7 @@ func New(cfg *rest.Config, sf schema.Factory, authMiddleware auth.Middleware, ne
 		server: server.DefaultAPIServer(),
 	}
 	a.server.AccessControl = accesscontrol.NewAccessControl()
+	a.server.CustomAPIUIResponseWriter(cssGetter, jsGetter, apiUIVersionGetter)
 
 	if authMiddleware == nil {
 		proxy, err = k8sproxy.Handler("/", cfg)

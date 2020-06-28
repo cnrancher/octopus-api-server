@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/rancher/apiserver/pkg/types"
+	"github.com/rancher/apiserver/pkg/writer"
 	"github.com/rancher/steve/pkg/accesscontrol"
 	"github.com/rancher/steve/pkg/auth"
 	"github.com/rancher/steve/pkg/client"
@@ -31,16 +32,19 @@ type Server struct {
 
 	RestConfig *rest.Config
 
-	ClientFactory   *client.Factory
-	BaseSchemas     *types.APISchemas
-	AccessSetLookup accesscontrol.AccessSetLookup
-	SchemaTemplates []schema.Template
-	AuthMiddleware  auth.Middleware
-	Next            http.Handler
-	Router          router.RouterFunc
-	PostStartHooks  []func() error
-	StartHooks      []StartHook
-	DashboardURL    func() string
+	ClientFactory      *client.Factory
+	BaseSchemas        *types.APISchemas
+	AccessSetLookup    accesscontrol.AccessSetLookup
+	SchemaTemplates    []schema.Template
+	AuthMiddleware     auth.Middleware
+	Next               http.Handler
+	Router             router.RouterFunc
+	PostStartHooks     []func() error
+	StartHooks         []StartHook
+	DashboardURL       func() string
+	CssGetter          writer.StringGetter
+	JsGetter           writer.StringGetter
+	ApiUIVersionGetter writer.StringGetter
 }
 
 type Controllers struct {
