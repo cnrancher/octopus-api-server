@@ -18,9 +18,11 @@ const (
 	AuthValuePrefix = "Bearer"
 	BasicAuthPrefix = "Basic"
 
-	usernameLabel      = "authn.management.edge.io/token-username"
-	edgeAPILabel       = "authn.management.edge.io/edge-api"
-	tokenNamespace     = "kube-system"
+	usernameLabel = "authn.management.edge.io/token-username"
+	EdgeAPILabel  = "authn.management.edge.io/edge-api"
+
+	TokenNamespace = "kube-system"
+
 	nameLength         = 8
 	tokenSecretKeyName = "Key"
 )
@@ -103,7 +105,7 @@ func createTokenSecret(token string, secretToken TokenSecretData) (corev1.Secret
 			Name: name,
 			Labels: map[string]string{
 				usernameLabel: secretToken.Subject,
-				edgeAPILabel:  "true",
+				EdgeAPILabel:  "true",
 			},
 		},
 		StringData: strData,

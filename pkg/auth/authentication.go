@@ -72,7 +72,7 @@ func (a *K3sAuthenticator) getJWTTokenSecret(token string) (*corev1.Secret, erro
 	if err != nil {
 		return secret, err
 	}
-	secret, err = a.clientset.CoreV1().Secrets(tokenNamespace).Get(a.context, name, metav1.GetOptions{})
+	secret, err = a.clientset.CoreV1().Secrets(TokenNamespace).Get(a.context, name, metav1.GetOptions{})
 	if err != nil {
 		return secret, err
 	}
@@ -88,7 +88,7 @@ func (a *K3sAuthenticator) validJWTToken(tokenString string, secret *corev1.Secr
 		return nil
 	} else if ve, ok := err.(*jwt.ValidationError); ok {
 		// delete token secret if is not valid
-		err = a.clientset.CoreV1().Secrets(tokenNamespace).Delete(a.context, secret.Name, metav1.DeleteOptions{})
+		err = a.clientset.CoreV1().Secrets(TokenNamespace).Delete(a.context, secret.Name, metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}
@@ -101,7 +101,7 @@ func (a *K3sAuthenticator) validJWTToken(tokenString string, secret *corev1.Secr
 			return fmt.Errorf("couldn't handle this token: %s", err)
 		}
 	} else {
-		err = a.clientset.CoreV1().Secrets(tokenNamespace).Delete(a.context, secret.Name, metav1.DeleteOptions{})
+		err = a.clientset.CoreV1().Secrets(TokenNamespace).Delete(a.context, secret.Name, metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}

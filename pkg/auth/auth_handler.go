@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	issuer           = "EdgeServer"
+	issuer           = "edge-api-server"
 	ttlSeconds       = 604800 //7 days
 	actionQuery      = "action"
 	loginActionName  = "login"
@@ -98,7 +98,7 @@ func (h *Handler) removeTokenSecret(token string) error {
 	if err != nil {
 		return err
 	}
-	return h.clientset.CoreV1().Secrets(tokenNamespace).Delete(h.context, name, metav1.DeleteOptions{})
+	return h.clientset.CoreV1().Secrets(TokenNamespace).Delete(h.context, name, metav1.DeleteOptions{})
 }
 
 func (h *Handler) createToken(name string) (string, error) {
@@ -124,8 +124,8 @@ func (h *Handler) createToken(name string) (string, error) {
 
 	secretToken := TokenSecretData{
 		Issuer:    issuer,
-		ExpiresAt: time.Now().Add(ttlSeconds).String(),
-		IssuedAt:  time.Now().String(),
+		ExpiresAt: time.Now().Add(ttlSeconds * time.Second).Format(time.RFC3339),
+		IssuedAt:  time.Now().Format(time.RFC3339),
 		Subject:   name,
 		Key:       key,
 	}
@@ -134,7 +134,7 @@ func (h *Handler) createToken(name string) (string, error) {
 		logrus.Errorf("failed to generate a JWT secret token, error: %s", err.Error())
 		return "", err
 	}
-	_, err = h.clientset.CoreV1().Secrets(tokenNamespace).Create(h.context, &secret, metav1.CreateOptions{})
+	_, err = h.clientset.CoreV1().Secrets(TokenNamespace).Create(h.context, &secret, metav1.CreateOptions{})
 	if err != nil {
 		logrus.Errorf("failed to create token secret, error: %s", err.Error())
 		return "", err

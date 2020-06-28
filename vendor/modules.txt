@@ -167,6 +167,7 @@ github.com/rancher/wrangler/pkg/summary
 github.com/rancher/wrangler/pkg/summary/client
 github.com/rancher/wrangler/pkg/summary/informer
 github.com/rancher/wrangler/pkg/summary/lister
+github.com/rancher/wrangler/pkg/ticker
 github.com/rancher/wrangler/pkg/yaml
 # github.com/rancher/wrangler-api v0.6.1-0.20200515193802-dcf70881b087
 github.com/rancher/wrangler-api/pkg/generated/controllers/apiextensions.k8s.io
