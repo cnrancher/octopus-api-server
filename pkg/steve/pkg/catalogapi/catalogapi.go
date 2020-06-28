@@ -8,6 +8,7 @@ import (
 	"github.com/rancher/steve/pkg/accesscontrol"
 	"github.com/rancher/steve/pkg/auth"
 	"github.com/rancher/steve/pkg/client"
+	"github.com/rancher/steve/pkg/resources/common"
 	"github.com/rancher/steve/pkg/schema"
 	steveserver "github.com/rancher/steve/pkg/server"
 	"github.com/rancher/steve/pkg/stores/proxy"
@@ -43,6 +44,7 @@ func (s *Server) Setup(ctx context.Context, server *steveserver.Server) error {
 		Store: store,
 		ID:    "edgeapi.cattle.io.catalog",
 		Formatter: func(request *types.APIRequest, resource *types.RawResource) {
+			common.Formatter(request, resource)
 			resource.AddAction(request, "refresh")
 		},
 		Customize: func(schema *types.APISchema) {
