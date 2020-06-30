@@ -49,7 +49,7 @@ func (s *Store) Create(apiOp *types.APIRequest, schema *types.APISchema, data ty
 	}
 
 	if deviceTemplateRevision.Name == "" {
-		deviceTemplateRevision.Name = fmt.Sprintf("%s-revision-%s", deviceTemplateRevision.Spec.DeviceTemplateName, util.GenerateRandomTempKey(7))
+		deviceTemplateRevision.Name = fmt.Sprintf("%s-revision-%s", deviceTemplateRevision.Spec.DeviceTemplateName, deviceTemplateRevision.Spec.DisplayName)
 	}
 
 	deviceTemplate, err := s.deviceTemplateController.Get(deviceTemplateRevision.Namespace, deviceTemplateRevision.Spec.DeviceTemplateName, metav1.GetOptions{})
