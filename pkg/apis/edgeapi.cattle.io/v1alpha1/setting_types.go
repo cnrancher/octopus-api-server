@@ -12,8 +12,8 @@ type Setting struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Value      string `json:"value" norman:"required"`
-	Default    string `json:"default" norman:"nocreate,noupdate"`
-	Customized bool   `json:"customized" norman:"nocreate,noupdate"`
-	Source     string `json:"source" norman:"nocreate,noupdate,options=db|default|env"`
+	Value      string `json:"value,omitempty"`
+	Default    string `json:"default,omitempty"`
+	Customized bool   `json:"customized,omitempty"`
+	Source     string `json:"source,omitempty"`
 }
