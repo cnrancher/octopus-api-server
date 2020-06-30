@@ -18,7 +18,7 @@ var (
 	SystemNamespaces = NewSetting("system-namespaces", "kube-system,kube-public,octopus-system")
 	UIIndex          = NewSetting("ui-index", "https://rancheredge-ui.s3-ap-east-1.amazonaws.com/ui/latest/index.html")
 	UIPath           = NewSetting("ui-path", "")
-	APIUIVersion     = NewSetting("api-ui-version", "1.1.9") // Please update the CATTLE_API_UI_VERSION in package/Dockerfile when updating the version here.
+	APIUIVersion     = NewSetting("api-ui-version", "1.1.9") // Please update the EDGE_API_UI_VERSION in package/Dockerfile when updating the version here.
 )
 
 func init() {

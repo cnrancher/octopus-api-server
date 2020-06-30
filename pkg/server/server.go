@@ -6,13 +6,15 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/cnrancher/edge-api-server/pkg/auth"
+	"github.com/cnrancher/edge-api-server/pkg/controllers"
+	"github.com/cnrancher/edge-api-server/pkg/server/ui"
+	"github.com/cnrancher/edge-api-server/pkg/settings"
 	"github.com/cnrancher/edge-api-server/pkg/steve/pkg/catalogapi"
 	"github.com/cnrancher/edge-api-server/pkg/steve/pkg/devicetemplateapi"
 	"github.com/cnrancher/edge-api-server/pkg/steve/pkg/devicetemplaterevisionapi"
 
-	"github.com/cnrancher/edge-api-server/pkg/auth"
-	"github.com/cnrancher/edge-api-server/pkg/controllers"
-	"github.com/cnrancher/edge-api-server/pkg/settings"
+	"github.com/rancher/apiserver/pkg/writer"
 	"github.com/rancher/steve/pkg/accesscontrol"
 	"github.com/rancher/steve/pkg/server"
 	steveserver "github.com/rancher/steve/pkg/server"
@@ -119,6 +121,11 @@ func newSteveServer(ctx context.Context, edgeServer *EdgeServer) (*steveserver.S
 			catalogAPIServer.Setup,
 			deviceTemplateAPIServer.Setup,
 			deviceTemplateRevisionAPIServer.Setup,
+		},
+		HTMLResponseWriter: writer.HTMLResponseWriter{
+			CSSURL:       ui.CSSURLGetter,
+			JSURL:        ui.JSURLGetter,
+			APIUIVersion: ui.APIUIVersionGetter,
 		},
 	}, nil
 }
