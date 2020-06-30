@@ -92,7 +92,7 @@ func setup(ctx context.Context, server *Server) (http.Handler, *schema.Collectio
 		ccache,
 		sf)
 
-	handler, err := handler.New(server.RestConfig, sf, server.AuthMiddleware, server.Next, server.Router)
+	handler, err := handler.New(server.RestConfig, sf, server.AuthMiddleware, server.Next, server.Router, server.HTMLResponseWriter)
 	if err != nil {
 		return nil, nil, err
 	}

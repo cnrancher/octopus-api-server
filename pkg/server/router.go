@@ -17,6 +17,7 @@ func SetupLocalHandler(server *EdgeServer) http.Handler {
 	authHandler := auth.NewAuthHandler(server.Context, server.RestConfig.Host, server.ClientSet)
 	dataStorageHealthHandler := extendapi.NewDataStorgeHealthHandler(server.ClientSet)
 
+	r.Path("/").Handler(http.RedirectHandler("/dashboard", http.StatusTemporaryRedirect))
 	r.Path("/v2-public/auth").Handler(authHandler)
 	r.Path("/v2-public/health/datastorage").Handler(dataStorageHealthHandler)
 
@@ -25,7 +26,6 @@ func SetupLocalHandler(server *EdgeServer) http.Handler {
 		middleware.CacheMiddleware("json", "js", "css")).Handler(ui.Content())
 
 	r.PathPrefix("/api-ui").Handler(uiContent)
-	r.NotFoundHandler = ui.UI(http.NotFoundHandler())
-
+	r.NotFoundHandler = http.NotFoundHandler()
 	return r
 }

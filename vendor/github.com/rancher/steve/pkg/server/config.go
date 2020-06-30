@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"github.com/rancher/apiserver/pkg/writer"
 	"net/http"
 	"time"
 
@@ -41,6 +42,7 @@ type Server struct {
 	PostStartHooks  []func() error
 	StartHooks      []StartHook
 	DashboardURL    func() string
+	HTMLResponseWriter  writer.HTMLResponseWriter
 }
 
 type Controllers struct {

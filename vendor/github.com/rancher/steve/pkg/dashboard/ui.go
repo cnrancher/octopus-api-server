@@ -63,7 +63,13 @@ func wrapUI(next http.Handler, uiGetter func() string) http.Handler {
 			if strings.HasPrefix(path, "http") {
 				ui(resp, req, path)
 			} else {
-				http.ServeFile(resp, req, path)
+				if strings.Contains(req.URL.Path, "/dashboard/c/") {
+					http.ServeFile(resp, req, path)
+				} else {
+					filepath := strings.Replace(req.URL.Path, "/dashboard", path, 1)
+					http.ServeFile(resp, req, filepath)
+				}
+
 			}
 		} else {
 			next.ServeHTTP(resp, req)
