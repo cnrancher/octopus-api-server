@@ -2,6 +2,7 @@ FROM golang:1.13.4-alpine3.10
 
 ARG DAPPER_HOST_ARCH
 ENV ARCH $DAPPER_HOST_ARCH
+ENV K3D_VERSION v1.7.0
 
 RUN apk -U add bash git gcc musl-dev docker vim less file curl wget ca-certificates
 RUN go get -d golang.org/x/lint/golint && \
@@ -17,6 +18,10 @@ RUN if [ "${ARCH}" == "amd64" ]; then \
         curl -sL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v1.15.0; \
     fi
 
+RUN curl -sfL https://github.com/rancher/k3d/releases/download/$K3D_VERSION/k3d-linux-$ARCH -o /usr/local/bin/k3d
+
+# K3d cluster apiserver requires privileges   
+ENV DAPPER_RUN_ARGS --privileged --network host
 ENV GO111MODULE off
 ENV DAPPER_ENV REPO TAG DRONE_TAG
 ENV DAPPER_SOURCE /go/src/github.com/cnrancher/edge-api-server/

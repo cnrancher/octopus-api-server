@@ -9,6 +9,7 @@ platform:
 steps:
 - name: build
   image: rancher/dapper:v0.4.1
+  privileged: true
   commands:
   - dapper ci
   volumes:
