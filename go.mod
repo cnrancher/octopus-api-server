@@ -19,6 +19,7 @@ require (
 	github.com/rancher/wrangler v0.6.2-0.20200515155908-1923f3f8ec3f
 	github.com/rancher/wrangler-api v0.6.1-0.20200515193802-dcf70881b087
 	github.com/sirupsen/logrus v1.4.2
+	github.com/stretchr/testify v1.5.1
 	github.com/urfave/cli v1.22.2
 	gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api v0.18.0
