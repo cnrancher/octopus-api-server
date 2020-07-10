@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cnrancher/edge-api-server/tests/integration/cluster"
-	"github.com/cnrancher/edge-api-server/tests/integration/framework"
+	"github.com/cnrancher/octopus-api-server/tests/integration/cluster"
+	"github.com/cnrancher/octopus-api-server/tests/integration/framework"
 	"github.com/stretchr/testify/suite"
 )
 

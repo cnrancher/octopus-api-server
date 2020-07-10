@@ -21,7 +21,7 @@ package fake
 import (
 	"context"
 
-	v1alpha1 "github.com/cnrancher/edge-api-server/pkg/apis/edgeapi.cattle.io/v1alpha1"
+	v1alpha1 "github.com/cnrancher/octopus-api-server/pkg/apis/octopusapi.cattle.io/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -32,13 +32,13 @@ import (
 
 // FakeCatalogs implements CatalogInterface
 type FakeCatalogs struct {
-	Fake *FakeEdgeapiV1alpha1
+	Fake *FakeOctopusapiV1alpha1
 	ns   string
 }
 
-var catalogsResource = schema.GroupVersionResource{Group: "edgeapi.cattle.io", Version: "v1alpha1", Resource: "catalogs"}
+var catalogsResource = schema.GroupVersionResource{Group: "octopusapi.cattle.io", Version: "v1alpha1", Resource: "catalogs"}
 
-var catalogsKind = schema.GroupVersionKind{Group: "edgeapi.cattle.io", Version: "v1alpha1", Kind: "Catalog"}
+var catalogsKind = schema.GroupVersionKind{Group: "octopusapi.cattle.io", Version: "v1alpha1", Kind: "Catalog"}
 
 // Get takes name of the catalog, and returns the corresponding catalog object, and an error if there is any.
 func (c *FakeCatalogs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Catalog, err error) {

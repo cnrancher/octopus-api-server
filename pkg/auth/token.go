@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cnrancher/edge-api-server/pkg/util"
+	"github.com/cnrancher/octopus-api-server/pkg/util"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,8 +18,8 @@ const (
 	AuthValuePrefix = "Bearer"
 	BasicAuthPrefix = "Basic"
 
-	usernameLabel = "authn.management.edge.io/token-username"
-	EdgeAPILabel  = "authn.management.edge.io/edge-api"
+	usernameLabel   = "authn.management.edge.io/token-username"
+	OctopusAPILabel = "authn.management.edge.io/octopus-api"
 
 	TokenNamespace = "kube-system"
 
@@ -104,8 +104,8 @@ func createTokenSecret(token string, secretToken TokenSecretData) (corev1.Secret
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 			Labels: map[string]string{
-				usernameLabel: secretToken.Subject,
-				EdgeAPILabel:  "true",
+				usernameLabel:   secretToken.Subject,
+				OctopusAPILabel: "true",
 			},
 		},
 		StringData: strData,

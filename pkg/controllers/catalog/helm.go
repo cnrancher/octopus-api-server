@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cnrancher/edge-api-server/pkg/apis/edgeapi.cattle.io/v1alpha1"
-	"github.com/cnrancher/edge-api-server/pkg/util"
+	"github.com/cnrancher/octopus-api-server/pkg/apis/octopusapi.cattle.io/v1alpha1"
+	"github.com/cnrancher/octopus-api-server/pkg/util"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )

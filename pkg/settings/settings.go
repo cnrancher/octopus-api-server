@@ -16,7 +16,7 @@ var (
 	ServerURL        = NewSetting("server-url", "")
 	Location         = NewSetting("location", "")
 	SystemNamespaces = NewSetting("system-namespaces", "kube-system,kube-public,octopus-system")
-	UIIndex          = NewSetting("ui-index", "https://rancheredge-ui.s3-ap-east-1.amazonaws.com/ui/latest/index.html")
+	UIIndex          = NewSetting("ui-index", "https://rancher-octopus.s3-ap-northeast-1.amazonaws.com/ui/latest/index.html")
 	UIPath           = NewSetting("ui-path", "")
 	APIUIVersion     = NewSetting("api-ui-version", "1.1.9") // Please update the EDGE_API_UI_VERSION in package/Dockerfile when updating the version here.
 )
@@ -112,5 +112,5 @@ func NewSetting(name, def string) Setting {
 }
 
 func GetEnvKey(key string) string {
-	return "EDGE_" + strings.ToUpper(strings.Replace(key, "-", "_", -1))
+	return "OCTOPUS_" + strings.ToUpper(strings.Replace(key, "-", "_", -1))
 }

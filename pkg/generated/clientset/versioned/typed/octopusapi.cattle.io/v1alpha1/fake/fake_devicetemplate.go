@@ -21,7 +21,7 @@ package fake
 import (
 	"context"
 
-	v1alpha1 "github.com/cnrancher/edge-api-server/pkg/apis/edgeapi.cattle.io/v1alpha1"
+	v1alpha1 "github.com/cnrancher/octopus-api-server/pkg/apis/octopusapi.cattle.io/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -32,13 +32,13 @@ import (
 
 // FakeDeviceTemplates implements DeviceTemplateInterface
 type FakeDeviceTemplates struct {
-	Fake *FakeEdgeapiV1alpha1
+	Fake *FakeOctopusapiV1alpha1
 	ns   string
 }
 
-var devicetemplatesResource = schema.GroupVersionResource{Group: "edgeapi.cattle.io", Version: "v1alpha1", Resource: "devicetemplates"}
+var devicetemplatesResource = schema.GroupVersionResource{Group: "octopusapi.cattle.io", Version: "v1alpha1", Resource: "devicetemplates"}
 
-var devicetemplatesKind = schema.GroupVersionKind{Group: "edgeapi.cattle.io", Version: "v1alpha1", Kind: "DeviceTemplate"}
+var devicetemplatesKind = schema.GroupVersionKind{Group: "octopusapi.cattle.io", Version: "v1alpha1", Kind: "DeviceTemplate"}
 
 // Get takes name of the deviceTemplate, and returns the corresponding deviceTemplate object, and an error if there is any.
 func (c *FakeDeviceTemplates) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.DeviceTemplate, err error) {

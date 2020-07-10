@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cnrancher/edge-api-server/pkg/util"
+	"github.com/cnrancher/octopus-api-server/pkg/util"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	issuer           = "edge-api-server"
+	issuer           = "octopus-api-server"
 	ttlSeconds       = 604800 //7 days
 	actionQuery      = "action"
 	loginActionName  = "login"

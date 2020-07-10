@@ -21,7 +21,7 @@ package fake
 import (
 	"context"
 
-	v1alpha1 "github.com/cnrancher/edge-api-server/pkg/apis/edgeapi.cattle.io/v1alpha1"
+	v1alpha1 "github.com/cnrancher/octopus-api-server/pkg/apis/octopusapi.cattle.io/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -32,12 +32,12 @@ import (
 
 // FakeSettings implements SettingInterface
 type FakeSettings struct {
-	Fake *FakeEdgeapiV1alpha1
+	Fake *FakeOctopusapiV1alpha1
 }
 
-var settingsResource = schema.GroupVersionResource{Group: "edgeapi.cattle.io", Version: "v1alpha1", Resource: "settings"}
+var settingsResource = schema.GroupVersionResource{Group: "octopusapi.cattle.io", Version: "v1alpha1", Resource: "settings"}
 
-var settingsKind = schema.GroupVersionKind{Group: "edgeapi.cattle.io", Version: "v1alpha1", Kind: "Setting"}
+var settingsKind = schema.GroupVersionKind{Group: "octopusapi.cattle.io", Version: "v1alpha1", Kind: "Setting"}
 
 // Get takes name of the setting, and returns the corresponding setting object, and an error if there is any.
 func (c *FakeSettings) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Setting, err error) {

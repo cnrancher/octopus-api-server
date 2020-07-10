@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cnrancher/edge-api-server/pkg/apis/edgeapi.cattle.io/v1alpha1"
-	"github.com/cnrancher/edge-api-server/pkg/auth"
-	controller "github.com/cnrancher/edge-api-server/pkg/generated/controllers/edgeapi.cattle.io/v1alpha1"
-	"github.com/cnrancher/edge-api-server/pkg/util"
+	"github.com/cnrancher/octopus-api-server/pkg/apis/octopusapi.cattle.io/v1alpha1"
+	"github.com/cnrancher/octopus-api-server/pkg/auth"
+	controller "github.com/cnrancher/octopus-api-server/pkg/generated/controllers/octopusapi.cattle.io/v1alpha1"
+	"github.com/cnrancher/octopus-api-server/pkg/util"
 	"github.com/rancher/apiserver/pkg/types"
 	"github.com/rancher/steve/pkg/accesscontrol"
 	"github.com/rancher/wrangler/pkg/data/convert"
@@ -29,10 +29,10 @@ type Store struct {
 }
 
 const (
-	templateDeviceTypeName    = "edgeapi.cattle.io/template-device-type"
-	templateDeviceVersionName = "edgeapi.cattle.io/template-device-version"
-	templateOwnerName         = "edgeapi.cattle.io/template-owner"
-	templateRevisionReference = "edgeapi.cattle.io/template-revision-reference"
+	templateDeviceTypeName    = "octopusapi.cattle.io/template-device-type"
+	templateDeviceVersionName = "octopusapi.cattle.io/template-device-version"
+	templateOwnerName         = "octopusapi.cattle.io/template-owner"
+	templateRevisionReference = "octopusapi.cattle.io/template-revision-reference"
 )
 
 func (s *Store) Create(apiOp *types.APIRequest, schema *types.APISchema, data types.APIObject) (types.APIObject, error) {

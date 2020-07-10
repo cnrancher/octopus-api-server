@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: edge-ui
+  name: octopus-ui
   namespace: kube-system
   labels:
-    app.kubernetes.io/name: edge-ui
+    app.kubernetes.io/name: octopus-ui
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: edge-ui
+      app.kubernetes.io/name: octopus-ui
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: edge-ui
+        app.kubernetes.io/name: octopus-ui
     spec:
-      serviceAccountName: edge-ui
+      serviceAccountName: octopus-ui
       containers:
-      - name: edge-api-server
-        image: cnrancher/edge-api-server:master
+      - name: octopus-api-server
+        image: cnrancher/octopus-api-server:master
         imagePullPolicy: Always
         ports:
         - name: http

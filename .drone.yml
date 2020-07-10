@@ -22,7 +22,7 @@ steps:
     dockerfile: package/Dockerfile
     password:
       from_secret: docker_password
-    repo: cnrancher/edge-api-server
+    repo: cnrancher/octopus-api-server
     tag: "${DRONE_BRANCH}-amd64"
     username:
       from_secret: docker_username
@@ -42,7 +42,7 @@ steps:
     dockerfile: package/Dockerfile
     password:
       from_secret: docker_password
-    repo: cnrancher/edge-api-server
+    repo: cnrancher/octopus-api-server
     tag: "${DRONE_TAG}-amd64"
     username:
       from_secret: docker_username
@@ -114,7 +114,7 @@ steps:
     dockerfile: package/Dockerfile
     password:
       from_secret: docker_password
-    repo: cnrancher/edge-api-server
+    repo: cnrancher/octopus-api-server
     tag: "${DRONE_BRANCH}-arm64"
     username:
       from_secret: docker_username
@@ -134,7 +134,7 @@ steps:
     dockerfile: package/Dockerfile
     password:
       from_secret: docker_password
-    repo: cnrancher/edge-api-server
+    repo: cnrancher/octopus-api-server
     tag: "${DRONE_TAG}-arm64"
     username:
       from_secret: docker_username
@@ -206,7 +206,7 @@ steps:
     dockerfile: package/Dockerfile
     password:
       from_secret: docker_password
-    repo: cnrancher/edge-api-server
+    repo: cnrancher/octopus-api-server
     tag: "${DRONE_BRANCH}-arm"
     username:
       from_secret: docker_username
@@ -226,7 +226,7 @@ steps:
     dockerfile: package/Dockerfile
     password:
       from_secret: docker_password
-    repo: cnrancher/edge-api-server
+    repo: cnrancher/octopus-api-server
     tag: "${DRONE_TAG}-arm"
     username:
       from_secret: docker_username
@@ -295,8 +295,8 @@ steps:
     - linux/amd64
     - linux/arm64
     - linux/arm
-    target: "cnrancher/edge-api-server:${DRONE_BRANCH}"
-    template: "cnrancher/edge-api-server:${DRONE_BRANCH}-ARCH"
+    target: "cnrancher/octopus-api-server:${DRONE_BRANCH}"
+    template: "cnrancher/octopus-api-server:${DRONE_BRANCH}-ARCH"
   when:
     ref:
       include:
@@ -318,8 +318,8 @@ steps:
       - linux/amd64
       - linux/arm64
       - linux/arm
-    target: "cnrancher/edge-api-server:${DRONE_TAG}"
-    template: "cnrancher/edge-api-server:${DRONE_TAG}-ARCH"
+    target: "cnrancher/octopus-api-server:${DRONE_TAG}"
+    template: "cnrancher/octopus-api-server:${DRONE_TAG}-ARCH"
   when:
     ref:
       include:
