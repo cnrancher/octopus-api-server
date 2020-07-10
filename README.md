@@ -1,9 +1,9 @@
-edge-api-server
+octopus-api-server
 ========
-[![Build Status](http://drone-pandaria.cnrancher.com/api/badges/cnrancher/edge-api-server/status.svg)](http://drone-pandaria.cnrancher.com/cnrancher/edge-api-server)
-[![Go Report Card](https://goreportcard.com/badge/github.com/cnrancher/edge-api-server)](https://goreportcard.com/report/github.com/cnrancher/edge-api-server)
+[![Build Status](http://drone-pandaria.cnrancher.com/api/badges/cnrancher/octopus-api-server/status.svg)](http://drone-pandaria.cnrancher.com/cnrancher/octopus-api-server)
+[![Go Report Card](https://goreportcard.com/badge/github.com/cnrancher/octopus-api-server)](https://goreportcard.com/report/github.com/cnrancher/octopus-api-server)
 
-This is the backend api server of the [Edge-UI](https://github.com/cnrancher/edge-ui).
+This is the backend api server of the [octopus-ui](https://github.com/cnrancher/octopus-ui).
 
 
 ## Building
@@ -13,7 +13,7 @@ This is the backend api server of the [Edge-UI](https://github.com/cnrancher/edg
 
 ## Running
 
-`./bin/edge-api-server`
+`./bin/octopus-api-server`
 
 ## License
 Copyright (c) 2019 [Rancher Labs, Inc.](http://rancher.com)

@@ -6,7 +6,7 @@ import (
 
 const (
 	Version = "v1alpha1"
-	Group   = "edgeapi.cattle.io"
+	Group   = "octopusapi.cattle.io"
 )
 
 func SetAndGetCRDName(name string) string {

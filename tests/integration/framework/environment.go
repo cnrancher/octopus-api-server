@@ -3,7 +3,7 @@ package framework
 import (
 	"os"
 
-	"github.com/cnrancher/edge-api-server/tests/integration/cluster"
+	"github.com/cnrancher/octopus-api-server/tests/integration/cluster"
 )
 
 var (

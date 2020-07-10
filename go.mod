@@ -1,4 +1,4 @@
-module github.com/cnrancher/edge-api-server
+module github.com/cnrancher/octopus-api-server
 
 go 1.13
 

@@ -19,34 +19,34 @@ limitations under the License.
 package fake
 
 import (
-	v1alpha1 "github.com/cnrancher/edge-api-server/pkg/generated/clientset/versioned/typed/edgeapi.cattle.io/v1alpha1"
+	v1alpha1 "github.com/cnrancher/octopus-api-server/pkg/generated/clientset/versioned/typed/octopusapi.cattle.io/v1alpha1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )
 
-type FakeEdgeapiV1alpha1 struct {
+type FakeOctopusapiV1alpha1 struct {
 	*testing.Fake
 }
 
-func (c *FakeEdgeapiV1alpha1) Catalogs(namespace string) v1alpha1.CatalogInterface {
+func (c *FakeOctopusapiV1alpha1) Catalogs(namespace string) v1alpha1.CatalogInterface {
 	return &FakeCatalogs{c, namespace}
 }
 
-func (c *FakeEdgeapiV1alpha1) DeviceTemplates(namespace string) v1alpha1.DeviceTemplateInterface {
+func (c *FakeOctopusapiV1alpha1) DeviceTemplates(namespace string) v1alpha1.DeviceTemplateInterface {
 	return &FakeDeviceTemplates{c, namespace}
 }
 
-func (c *FakeEdgeapiV1alpha1) DeviceTemplateRevisions(namespace string) v1alpha1.DeviceTemplateRevisionInterface {
+func (c *FakeOctopusapiV1alpha1) DeviceTemplateRevisions(namespace string) v1alpha1.DeviceTemplateRevisionInterface {
 	return &FakeDeviceTemplateRevisions{c, namespace}
 }
 
-func (c *FakeEdgeapiV1alpha1) Settings() v1alpha1.SettingInterface {
+func (c *FakeOctopusapiV1alpha1) Settings() v1alpha1.SettingInterface {
 	return &FakeSettings{c}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *FakeEdgeapiV1alpha1) RESTClient() rest.Interface {
+func (c *FakeOctopusapiV1alpha1) RESTClient() rest.Interface {
 	var ret *rest.RESTClient
 	return ret
 }

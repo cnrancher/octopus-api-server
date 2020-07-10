@@ -7,8 +7,8 @@ import (
 	"github.com/rancher/steve/pkg/stores/proxy"
 	"github.com/sirupsen/logrus"
 
-	apiAuth "github.com/cnrancher/edge-api-server/pkg/auth"
-	v1 "github.com/cnrancher/edge-api-server/pkg/generated/controllers/edgeapi.cattle.io"
+	apiAuth "github.com/cnrancher/octopus-api-server/pkg/auth"
+	v1 "github.com/cnrancher/octopus-api-server/pkg/generated/controllers/octopusapi.cattle.io"
 	"github.com/rancher/steve/pkg/accesscontrol"
 	"github.com/rancher/steve/pkg/auth"
 	"github.com/rancher/steve/pkg/client"
@@ -41,11 +41,11 @@ func (s *Server) Setup(ctx context.Context, server *steveserver.Server) error {
 		ctx:                      s.ctx,
 		client:                   server.ClientFactory.DynamicClient(),
 		auth:                     s.Authenticator,
-		deviceTemplateController: controllers.Edgeapi().V1alpha1().DeviceTemplate(),
+		deviceTemplateController: controllers.Octopusapi().V1alpha1().DeviceTemplate(),
 	}
 	server.SchemaTemplates = append(server.SchemaTemplates, schema.Template{
 		Store: store,
-		ID:    "edgeapi.cattle.io.devicetemplaterevision",
+		ID:    "octopusapi.cattle.io.devicetemplaterevision",
 	})
 	return nil
 }

@@ -1,4 +1,4 @@
-apiVersion: edgeapi.cattle.io/v1alpha1
+apiVersion: octopusapi.cattle.io/v1alpha1
 kind: DeviceTemplateRevision
 metadata:
   name: v1
@@ -7,7 +7,7 @@ spec:
   displayName: v1
   enable: true
   deviceTemplateName: my-template
-  deviceTemplateAPIVersion: edgeapi.cattle.io/v1alpha1
+  deviceTemplateAPIVersion: octopusapi.cattle.io/v1alpha1
   labels:
     foo: bar
     bbb: xxxx

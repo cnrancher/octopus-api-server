@@ -3,8 +3,8 @@ package devicetemplateapi
 import (
 	"context"
 
-	apiAuth "github.com/cnrancher/edge-api-server/pkg/auth"
-	v1 "github.com/cnrancher/edge-api-server/pkg/generated/controllers/edgeapi.cattle.io"
+	apiAuth "github.com/cnrancher/octopus-api-server/pkg/auth"
+	v1 "github.com/cnrancher/octopus-api-server/pkg/generated/controllers/octopusapi.cattle.io"
 	"github.com/rancher/steve/pkg/accesscontrol"
 	"github.com/rancher/steve/pkg/auth"
 	"github.com/rancher/steve/pkg/client"
@@ -39,11 +39,11 @@ func (s *Server) Setup(ctx context.Context, server *steveserver.Server) error {
 		asl:                s.asl,
 		ctx:                s.ctx,
 		auth:               s.Authenticator,
-		revisionController: controllers.Edgeapi().V1alpha1().DeviceTemplateRevision(),
+		revisionController: controllers.Octopusapi().V1alpha1().DeviceTemplateRevision(),
 	}
 	server.SchemaTemplates = append(server.SchemaTemplates, schema.Template{
 		Store: store,
-		ID:    "edgeapi.cattle.io.devicetemplate",
+		ID:    "octopusapi.cattle.io.devicetemplate",
 	})
 
 	return nil

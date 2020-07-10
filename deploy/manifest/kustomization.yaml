@@ -4,4 +4,3 @@ resources:
 - service.yaml
 commonLabels:
   app.kubernetes.io/version: 0.1.0
-namePrefix: rancher-

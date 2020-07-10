@@ -4,17 +4,15 @@ import (
 	"context"
 	"time"
 
-	"k8s.io/apimachinery/pkg/runtime"
-
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/cnrancher/edge-api-server/pkg/auth"
+	"github.com/cnrancher/octopus-api-server/pkg/auth"
 	corev1 "github.com/rancher/wrangler-api/pkg/generated/controllers/core/v1"
 	"github.com/rancher/wrangler/pkg/apply"
 	"github.com/rancher/wrangler/pkg/ticker"
 	"github.com/sirupsen/logrus"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/selection"
 )
 
@@ -55,7 +53,7 @@ func (c *Controller) tokenSyncHandler(key string, obj runtime.Object) (runtime.O
 }
 
 func runRefreshSecretToken(ctx context.Context, interval int, secretController corev1.SecretController) {
-	r, _ := labels.NewRequirement(auth.EdgeAPILabel, selection.Equals, []string{"true"})
+	r, _ := labels.NewRequirement(auth.OctopusAPILabel, selection.Equals, []string{"true"})
 	labels := labels.NewSelector().Add(*r)
 	for range ticker.Context(ctx, time.Duration(interval)*time.Second) {
 		logrus.Info("Run refresh secretToken")
@@ -91,7 +89,7 @@ func checkExpiredToken(secret *v1.Secret) bool {
 
 func hasSecretTokenLabel(labels map[string]string) bool {
 	for k := range labels {
-		if k == auth.EdgeAPILabel {
+		if k == auth.OctopusAPILabel {
 			return true
 		}
 	}

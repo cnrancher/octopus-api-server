@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cnrancher/edge-api-server/pkg/apis/edgeapi.cattle.io/v1alpha1"
-	controllers "github.com/cnrancher/edge-api-server/pkg/generated/controllers/edgeapi.cattle.io/v1alpha1"
+	"github.com/cnrancher/octopus-api-server/pkg/apis/octopusapi.cattle.io/v1alpha1"
+	controllers "github.com/cnrancher/octopus-api-server/pkg/generated/controllers/octopusapi.cattle.io/v1alpha1"
 	"github.com/rancher/wrangler/pkg/apply"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,13 +19,13 @@ const (
 )
 
 const (
-	templateRevisionReference = "edgeapi.cattle.io/template-revision-reference"
+	templateRevisionReference = "octopusapi.cattle.io/template-revision-reference"
 	deviceTemplateKindName    = "DeviceTemplate"
 )
 
 const (
-	templateDeviceTypeName    = "edgeapi.cattle.io/template-device-type"
-	templateDeviceVersionName = "edgeapi.cattle.io/template-device-version"
+	templateDeviceTypeName    = "octopusapi.cattle.io/template-device-type"
+	templateDeviceVersionName = "octopusapi.cattle.io/template-device-version"
 )
 
 type Controller struct {

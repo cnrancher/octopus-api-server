@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	ClusterName = "edge-integration-test"
+	ClusterName = "octopus-api-integration-test"
 	K3dVersion  = "v1.7.0"
 )
 

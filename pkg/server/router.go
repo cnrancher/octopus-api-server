@@ -3,9 +3,9 @@ package server
 import (
 	"net/http"
 
-	"github.com/cnrancher/edge-api-server/pkg/auth"
-	"github.com/cnrancher/edge-api-server/pkg/extendapi"
-	"github.com/cnrancher/edge-api-server/pkg/server/ui"
+	"github.com/cnrancher/octopus-api-server/pkg/auth"
+	"github.com/cnrancher/octopus-api-server/pkg/extendapi"
+	"github.com/cnrancher/octopus-api-server/pkg/server/ui"
 	"github.com/gorilla/mux"
 	"github.com/rancher/apiserver/pkg/middleware"
 )

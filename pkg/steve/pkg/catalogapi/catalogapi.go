@@ -3,7 +3,7 @@ package catalogapi
 import (
 	"context"
 
-	v1 "github.com/cnrancher/edge-api-server/pkg/generated/controllers/edgeapi.cattle.io"
+	v1 "github.com/cnrancher/octopus-api-server/pkg/generated/controllers/octopusapi.cattle.io"
 	"github.com/rancher/apiserver/pkg/types"
 	"github.com/rancher/steve/pkg/accesscontrol"
 	"github.com/rancher/steve/pkg/auth"
@@ -38,11 +38,11 @@ func (s *Server) Setup(ctx context.Context, server *steveserver.Server) error {
 	store := &Store{
 		Store:      proxyStore,
 		asl:        s.asl,
-		controller: controllers.Edgeapi().V1alpha1().Catalog(),
+		controller: controllers.Octopusapi().V1alpha1().Catalog(),
 	}
 	server.SchemaTemplates = append(server.SchemaTemplates, schema.Template{
 		Store: store,
-		ID:    "edgeapi.cattle.io.catalog",
+		ID:    "octopusapi.cattle.io.catalog",
 		Formatter: func(request *types.APIRequest, resource *types.RawResource) {
 			common.Formatter(request, resource)
 			resource.AddAction(request, "refresh")

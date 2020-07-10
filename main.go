@@ -8,7 +8,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/cnrancher/edge-api-server/pkg/server"
+	"github.com/cnrancher/octopus-api-server/pkg/server"
 	"github.com/rancher/steve/pkg/debug"
 	"github.com/rancher/steve/pkg/version"
 	"github.com/rancher/wrangler/pkg/signals"
@@ -23,9 +23,9 @@ var (
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "edge-api-server"
+	app.Name = "octopus-api-server"
 	app.Version = version.FriendlyVersion()
-	app.Usage = "Run the edge api server of k3s"
+	app.Usage = "Run the octopus api server of k3s"
 
 	var config server.Config
 	app.Flags = []cli.Flag{

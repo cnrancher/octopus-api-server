@@ -1,4 +1,4 @@
-apiVersion: edgeapi.cattle.io/v1alpha1
+apiVersion: octopusapi.cattle.io/v1alpha1
 kind: Catalog
 metadata:
   name: bitnami

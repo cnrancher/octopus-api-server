@@ -19,9 +19,9 @@ limitations under the License.
 package fake
 
 import (
-	clientset "github.com/cnrancher/edge-api-server/pkg/generated/clientset/versioned"
-	edgeapiv1alpha1 "github.com/cnrancher/edge-api-server/pkg/generated/clientset/versioned/typed/edgeapi.cattle.io/v1alpha1"
-	fakeedgeapiv1alpha1 "github.com/cnrancher/edge-api-server/pkg/generated/clientset/versioned/typed/edgeapi.cattle.io/v1alpha1/fake"
+	clientset "github.com/cnrancher/octopus-api-server/pkg/generated/clientset/versioned"
+	octopusapiv1alpha1 "github.com/cnrancher/octopus-api-server/pkg/generated/clientset/versioned/typed/octopusapi.cattle.io/v1alpha1"
+	fakeoctopusapiv1alpha1 "github.com/cnrancher/octopus-api-server/pkg/generated/clientset/versioned/typed/octopusapi.cattle.io/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -76,7 +76,7 @@ func (c *Clientset) Tracker() testing.ObjectTracker {
 
 var _ clientset.Interface = &Clientset{}
 
-// EdgeapiV1alpha1 retrieves the EdgeapiV1alpha1Client
-func (c *Clientset) EdgeapiV1alpha1() edgeapiv1alpha1.EdgeapiV1alpha1Interface {
-	return &fakeedgeapiv1alpha1.FakeEdgeapiV1alpha1{Fake: &c.Fake}
+// OctopusapiV1alpha1 retrieves the OctopusapiV1alpha1Client
+func (c *Clientset) OctopusapiV1alpha1() octopusapiv1alpha1.OctopusapiV1alpha1Interface {
+	return &fakeoctopusapiv1alpha1.FakeOctopusapiV1alpha1{Fake: &c.Fake}
 }

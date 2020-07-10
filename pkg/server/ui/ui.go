@@ -3,7 +3,7 @@ package ui
 import (
 	"net/http"
 
-	"github.com/cnrancher/edge-api-server/pkg/settings"
+	"github.com/cnrancher/octopus-api-server/pkg/settings"
 )
 
 func Content() http.Handler {

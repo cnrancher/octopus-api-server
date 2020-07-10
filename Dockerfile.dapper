@@ -20,11 +20,11 @@ RUN if [ "${ARCH}" == "amd64" ]; then \
 
 RUN curl -sfL https://github.com/rancher/k3d/releases/download/$K3D_VERSION/k3d-linux-$ARCH -o /usr/local/bin/k3d
 
-# K3d cluster apiserver requires privileges   
+# K3d cluster apiserver requires privileges
 ENV DAPPER_RUN_ARGS --privileged --network host
 ENV GO111MODULE off
 ENV DAPPER_ENV REPO TAG DRONE_TAG
-ENV DAPPER_SOURCE /go/src/github.com/cnrancher/edge-api-server/
+ENV DAPPER_SOURCE /go/src/github.com/cnrancher/octopus-api-server/
 ENV DAPPER_OUTPUT ./bin ./dist
 ENV DAPPER_DOCKER_SOCKET true
 ENV HOME ${DAPPER_SOURCE}

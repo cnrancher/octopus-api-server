@@ -22,8 +22,8 @@ import (
 	"context"
 	"time"
 
-	v1alpha1 "github.com/cnrancher/edge-api-server/pkg/apis/edgeapi.cattle.io/v1alpha1"
-	scheme "github.com/cnrancher/edge-api-server/pkg/generated/clientset/versioned/scheme"
+	v1alpha1 "github.com/cnrancher/octopus-api-server/pkg/apis/octopusapi.cattle.io/v1alpha1"
+	scheme "github.com/cnrancher/octopus-api-server/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -57,7 +57,7 @@ type deviceTemplateRevisions struct {
 }
 
 // newDeviceTemplateRevisions returns a DeviceTemplateRevisions
-func newDeviceTemplateRevisions(c *EdgeapiV1alpha1Client, namespace string) *deviceTemplateRevisions {
+func newDeviceTemplateRevisions(c *OctopusapiV1alpha1Client, namespace string) *deviceTemplateRevisions {
 	return &deviceTemplateRevisions{
 		client: c.RESTClient(),
 		ns:     namespace,
