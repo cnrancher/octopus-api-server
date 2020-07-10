@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
 	"os/exec"
 	"runtime"
 	"strconv"
@@ -16,6 +17,8 @@ const (
 	ClusterName = "octopus-api-integration-test"
 	K3dVersion  = "v1.7.0"
 )
+
+var proxy = []string{"http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY"}
 
 func StepK3dCluster() error {
 	if err := ValidateK3d(); err != nil {
@@ -68,6 +71,9 @@ func ValidateK3d() error {
 }
 
 func CreateK3dCluster() error {
+	for i := range proxy {
+		os.Unsetenv(proxy[i])
+	}
 	maxTry := 10
 	reTry := 0
 RANDOM:

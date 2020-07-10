@@ -2,12 +2,15 @@ package types
 
 import (
 	"strings"
+	"sync"
 
 	"github.com/rancher/wrangler/pkg/schemas"
 	"github.com/sirupsen/logrus"
 )
 
 type APISchemas struct {
+	sync.Mutex
+
 	InternalSchemas *schemas.Schemas
 	Schemas         map[string]*APISchema
 	index           map[string]*APISchema
@@ -103,6 +106,8 @@ func (a *APISchemas) AddSchema(schema APISchema) error {
 }
 
 func (a *APISchemas) LookupSchema(name string) *APISchema {
+	a.Lock()
+	defer a.Unlock()
 	s, ok := a.Schemas[name]
 	if ok {
 		return s
