@@ -14,10 +14,10 @@ import (
 )
 
 const (
-	Name            = "catalog-controller"
-	Namespace       = "kube-system"
-	MQTTCatalogName = "mqtt-library"
-	MQTTCatalogURL  = "http://charts.cnrancher.cn/mqtt"
+	Name               = "catalog-controller"
+	Namespace          = "kube-system"
+	OctopusCatalogName = "octopus-catalog"
+	OctopusCatalogURL  = "http://charts.cnrancher.cn/octopus-catalog"
 )
 
 type Controller struct {
@@ -34,7 +34,7 @@ func Register(ctx context.Context, apply apply.Apply, catalogs catalogcontroller
 	}
 	catalogs.OnChange(ctx, Name, controller.OnCatalogChanged)
 	catalogs.OnRemove(ctx, Name, controller.OnCatalogRemoved)
-	if err := addMQTTCatalog(catalogs, MQTTCatalogName, MQTTCatalogURL); err != nil {
+	if err := addMQTTCatalog(catalogs, OctopusCatalogName, OctopusCatalogURL); err != nil {
 		logrus.Error(err)
 	}
 }
