@@ -13,7 +13,7 @@ fi
 if echo "$VERSION" | grep -q -e '^v.*' ; then
     UI_INDEX="local"
 fi
-UI_INDEX=${UI_INDEX:-"https://rancher-octopus.s3-ap-northeast-1.amazonaws.com/ui/latest/index.html"}
+UI_INDEX=${UI_INDEX:-"https://rancher-octopus.s3-accelerate.amazonaws.com/ui/latest/index.html"}
 
 # Inject Setting values
 DEFAULT_VALUES="{\"ui-index\":\"${UI_INDEX}\"}"

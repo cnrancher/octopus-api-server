@@ -13,7 +13,7 @@ ENV OCTOPUS_API_UI_VERSION 1.1.9
 
 RUN mkdir -p /usr/share/rancher/octopus-ui && \
     cd /usr/share/rancher/octopus-ui && \
-    curl -sL https://rancher-octopus.s3-ap-northeast-1.amazonaws.com/ui/dist/${OCTOPUS_UI_VERSION}.tar.gz | tar xvzf - --strip-components=2 && \
+    curl -sL https://rancher-octopus.s3-accelerate.amazonaws.com/ui/dist/${OCTOPUS_UI_VERSION}.tar.gz | tar xvzf - --strip-components=2 && \
     mkdir -p /usr/share/rancher/octopus-ui/api-ui && \
     cd /usr/share/rancher/octopus-ui/api-ui && \
     curl -sL https://releases.rancher.com/api-ui/${OCTOPUS_API_UI_VERSION}.tar.gz | tar xvzf - --strip-components=1 && \
