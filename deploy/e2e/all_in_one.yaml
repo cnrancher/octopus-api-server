@@ -3,7 +3,7 @@ kind: ServiceAccount
 metadata:
   labels:
     app.kubernetes.io/name: octopus-ui
-    app.kubernetes.io/version: 0.1.0
+    app.kubernetes.io/version: 1.0.0
   name: octopus-ui
   namespace: kube-system
 ---
@@ -12,7 +12,7 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     app.kubernetes.io/name: octopus-ui
-    app.kubernetes.io/version: 0.1.0
+    app.kubernetes.io/version: 1.0.0
   name: octopus-ui-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -28,7 +28,7 @@ kind: Service
 metadata:
   labels:
     app.kubernetes.io/name: octopus-ui
-    app.kubernetes.io/version: 0.1.0
+    app.kubernetes.io/version: 1.0.0
   name: octopus-ui
   namespace: kube-system
 spec:
@@ -39,7 +39,7 @@ spec:
     targetPort: http
   selector:
     app.kubernetes.io/name: octopus-ui
-    app.kubernetes.io/version: 0.1.0
+    app.kubernetes.io/version: 1.0.0
   type: LoadBalancer
 ---
 apiVersion: apps/v1
@@ -47,7 +47,7 @@ kind: Deployment
 metadata:
   labels:
     app.kubernetes.io/name: octopus-ui
-    app.kubernetes.io/version: 0.1.0
+    app.kubernetes.io/version: 1.0.0
   name: octopus-ui
   namespace: kube-system
 spec:
@@ -55,12 +55,12 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: octopus-ui
-      app.kubernetes.io/version: 0.1.0
+      app.kubernetes.io/version: 1.0.0
   template:
     metadata:
       labels:
         app.kubernetes.io/name: octopus-ui
-        app.kubernetes.io/version: 0.1.0
+        app.kubernetes.io/version: 1.0.0
     spec:
       affinity:
         nodeAffinity:
