@@ -80,9 +80,13 @@ func GetJWTSecretTokenName(token string) (string, error) {
 	if err != nil {
 		return name, err
 	}
-	name = strings.Trim(strings.ToLower(parts[2]), "_")
-	name = name[len(name)-nameLength:]
-	return fmt.Sprintf("jwt-%s-secret", name), nil
+	splitToken := strings.ToLower(parts[2])
+	if splitToken != "" && len(splitToken) >= nameLength {
+		name = strings.Replace(splitToken, "_", "-", -1)
+		name = name[len(name)-nameLength:]
+		return fmt.Sprintf("jwt-%s-secret", name), nil
+	}
+	return name, fmt.Errorf("failed to generate token name by JWT token, invalid length %d", len(parts[2]))
 }
 
 func SplitJWTTokenParts(token string) ([]string, error) {
