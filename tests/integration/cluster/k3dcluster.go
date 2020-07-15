@@ -44,18 +44,15 @@ func InstallK3d() error {
 	arch := runtime.GOARCH
 	url := fmt.Sprintf("https://github.com/rancher/k3d/releases/download/%s/k3d-%s-%s", K3dVersion, osStr, arch)
 	cmd := exec.Command("curl", "-fL", url, "-o", "/tmp/k3d")
-	err := cmd.Run()
+	out, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Println(err)
-		return err
+		return fmt.Errorf("curl download k3d error: %v, out: %s", err, string(out))
 	}
-	if err = exec.Command("chmod", "+x", "/tmp/k3d").Run(); err != nil {
-		log.Println(err)
-		return err
+	if out, err := exec.Command("chmod", "+x", "/tmp/k3d").CombinedOutput(); err != nil {
+		return fmt.Errorf("chmod k3d error: %v, out: %s", err, string(out))
 	}
 	if out, err := exec.Command("/bin/bash", "-c", "mv /tmp/k3d /usr/local/bin/k3d").CombinedOutput(); err != nil {
-		log.Println(err, string(out))
-		return err
+		return fmt.Errorf("mv k3d error: %v, out: %s", err, string(out))
 	}
 	return nil
 }
@@ -90,8 +87,8 @@ RANDOM:
 	}
 
 	cmd := exec.Command("k3d", "create", "--api-port", fmt.Sprintf("0.0.0.0:%d", randomPort), "--name", ClusterName, "--wait", "60")
-	if errCreate := cmd.Run(); errCreate != nil {
-		return errCreate
+	if out, errCreate := cmd.CombinedOutput(); errCreate != nil {
+		return fmt.Errorf("k3d create commond error: %v, out: %s", err, string(out))
 	}
 
 	return nil
@@ -115,8 +112,8 @@ RETRY:
 
 func CleanK3dCluster() error {
 	cmd := exec.Command("k3d", "delete", "--name", ClusterName)
-	if err := cmd.Run(); err != nil {
-		return err
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("k3d delete commond error: %v, out: %s", err, string(out))
 	}
 	return nil
 }
