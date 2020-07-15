@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y git curl unzip xz-utils tini && \
 
 WORKDIR /var/lib/rancher/octopus-ui
 
-ENV OCTOPUS_UI_VERSION 0.1.0
+ENV OCTOPUS_UI_VERSION v1.0.0
 ENV OCTOPUS_UI_PATH /usr/share/rancher/octopus-ui
 # Please update the api-ui-version in pkg/settings/settings.go when updating the version here.
 ENV OCTOPUS_API_UI_VERSION 1.1.9

@@ -71,7 +71,7 @@ func main() {
 
 func run(_ *cli.Context, config server.Config) error {
 	debugConfig.MustSetupDebug()
-	klog.Infof("Edge api server version %s is starting", version.FriendlyVersion())
+	klog.Infof("Octopus api server version %s is starting", version.FriendlyVersion())
 
 	ctx := signals.SetupSignalHandler(context.Background())
 

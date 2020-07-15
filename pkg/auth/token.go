@@ -18,8 +18,8 @@ const (
 	AuthValuePrefix = "Bearer"
 	BasicAuthPrefix = "Basic"
 
-	usernameLabel   = "authn.management.edge.io/token-username"
-	OctopusAPILabel = "authn.management.edge.io/octopus-api"
+	usernameLabel   = "authn.management.octopusapi.io/token-username"
+	OctopusAPILabel = "authn.management.octopusapi.io/octopus-api"
 
 	TokenNamespace = "kube-system"
 
