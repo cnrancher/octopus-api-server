@@ -17,7 +17,6 @@ import (
 	"github.com/rancher/apiserver/pkg/writer"
 	"github.com/rancher/steve/pkg/accesscontrol"
 	"github.com/rancher/steve/pkg/server"
-	steveserver "github.com/rancher/steve/pkg/server"
 	"github.com/rancher/wrangler/pkg/ratelimit"
 	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/dynamic"
@@ -98,14 +97,14 @@ func New(ctx context.Context, clientConfig clientcmd.ClientConfig, cfg *Config) 
 	}, nil
 }
 
-func newSteveServer(ctx context.Context, edgeServer *EdgeServer) (*steveserver.Server, error) {
+func newSteveServer(ctx context.Context, edgeServer *EdgeServer) (*server.Server, error) {
 	a := auth.NewK3sAuthenticator(ctx, edgeServer.RestConfig.Host, edgeServer.ClientSet)
 	handler := SetupLocalHandler(edgeServer)
 
 	catalogAPIServer := &catalogapi.Server{}
 	deviceTemplateAPIServer := &devicetemplateapi.Server{Authenticator: a}
 	deviceTemplateRevisionAPIServer := &devicetemplaterevisionapi.Server{Authenticator: a}
-	return &steveserver.Server{
+	return &server.Server{
 		Controllers:     edgeServer.Controllers,
 		AccessSetLookup: edgeServer.ASL,
 		RestConfig:      edgeServer.RestConfig,
@@ -117,7 +116,7 @@ func newSteveServer(ctx context.Context, edgeServer *EdgeServer) (*steveserver.S
 			}
 			return settings.UIIndex.Get()
 		},
-		StartHooks: []steveserver.StartHook{
+		StartHooks: []server.StartHook{
 			catalogAPIServer.Setup,
 			deviceTemplateAPIServer.Setup,
 			deviceTemplateRevisionAPIServer.Setup,
