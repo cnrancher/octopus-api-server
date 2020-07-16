@@ -18,7 +18,7 @@ spec:
       serviceAccountName: octopus-ui
       containers:
       - name: octopus-api-server
-        image: cnrancher/octopus-api-server:master
+        image: cnrancher/octopus-api-server:v1.0.2
         imagePullPolicy: Always
         ports:
         - name: http
