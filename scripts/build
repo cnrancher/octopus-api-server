@@ -20,6 +20,7 @@ DEFAULT_VALUES="{\"ui-index\":\"${UI_INDEX}\"}"
 
 LINKFLAGS="-X github.com/cnrancher/octopus-api-server.Version=$VERSION"
 LINKFLAGS="-X github.com/cnrancher/octopus-api-server.GitCommit=$COMMIT $LINKFLAGS"
+LINKFLAGS="-X github.com/cnrancher/octopus-api-server/pkg/settings.InjectDefaults=$DEFAULT_VALUES $LINKFLAGS"
 CGO_ENABLED=0 go build -ldflags "$LINKFLAGS $OTHER_LINKFLAGS" -o bin/octopus-api-server
 if [ "$CROSS" = "true" ] && [ "$ARCH" = "amd64" ]; then
     GOOS=darwin go build -ldflags "$LINKFLAGS" -o bin/octopus-api-server-darwin
