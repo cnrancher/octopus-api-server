@@ -328,6 +328,7 @@ steps:
       - "refs/tags/v*"
     event:
       include:
+      - push
       - tag
 
 node:
