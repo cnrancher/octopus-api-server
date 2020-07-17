@@ -284,7 +284,7 @@ platform:
   arch: amd64
 
 steps:
-- name: manifest-master
+- name: manifest
   image: plugins/manifest:1.0.2
   settings:
     username:
@@ -306,30 +306,6 @@ steps:
     event:
       include:
       - push
-
-- name: manifest
-  image: plugins/manifest:1.0.2
-  settings:
-    username:
-      from_secret: docker_username
-    password:
-      from_secret: docker_password
-    platforms:
-      - linux/amd64
-      - linux/arm64
-      - linux/arm
-    target: "cnrancher/octopus-api-server:${DRONE_TAG}"
-    template: "cnrancher/octopus-api-server:${DRONE_TAG}-ARCH"
-  when:
-    ref:
-      include:
-      - "refs/heads/master"
-      - "refs/heads/release/v*"
-      - "refs/tags/v*"
-    event:
-      include:
-      - push
-      - tag
 
 node:
   instance: agent-amd64
