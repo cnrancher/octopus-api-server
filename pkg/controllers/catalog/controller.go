@@ -17,7 +17,7 @@ const (
 	Name               = "catalog-controller"
 	Namespace          = "kube-system"
 	OctopusCatalogName = "octopus-catalog"
-	OctopusCatalogURL  = "http://charts.cnrancher.cn/octopus-catalog"
+	OctopusCatalogURL  = "http://charts.cnrancher.com/octopus-catalog"
 )
 
 type Controller struct {
