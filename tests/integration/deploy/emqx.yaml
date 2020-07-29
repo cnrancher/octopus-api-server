@@ -5,7 +5,7 @@ metadata:
   namespace: default
 spec:
   chart: emqx
-  repo: http://charts.cnrancher.cn/mqtt
+  repo: http://charts.cnrancher.com/octopus-catalog
   version: v1.0.0-rc.1
   targetNamespace: kube-system
   valuesContent: |-
